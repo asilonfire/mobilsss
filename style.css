@@ -1,0 +1,410 @@
+:root{
+  --ink:#fff;
+  --muted:#cdebc0;
+  --orange:#ff8a1e;
+  --orange2:#ffb347;
+  --gold:#ffd24a;
+  --hp:#ff3b46;
+  --good:#7dff8a;
+  --line:rgba(0,0,0,.25);
+  --dock:#241c2e;
+  --dock2:#2e2540;
+  --card:#3a3050;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%}
+body{
+  background:#0c0a10;color:var(--ink);
+  font-family:"Baloo 2",system-ui,sans-serif;font-weight:700;
+  overflow:hidden;user-select:none;touch-action:manipulation;
+}
+#app{
+  position:relative;width:100%;max-width:480px;height:100dvh;margin:0 auto;
+  display:flex;flex-direction:column;overflow:hidden;
+}
+
+/* ===================== HUD ===================== */
+#hud{position:absolute;top:0;left:0;right:0;z-index:20;padding:8px 10px;
+  background:linear-gradient(180deg, rgba(0,0,0,.45), transparent);}
+.hud-row1{display:flex;align-items:center;gap:8px}
+.icon-btn{width:34px;height:34px;border-radius:10px;border:2px solid rgba(255,255,255,.25);
+  background:rgba(0,0,0,.3);color:#fff;font-size:16px;cursor:pointer}
+.enemy-info{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px}
+.enemy-name{font-size:15px;font-weight:800;text-shadow:0 2px 4px #000;color:#ffd9c2}
+.hp-track{position:relative;width:100%;max-width:240px;height:18px;border-radius:99px;
+  background:rgba(0,0,0,.55);border:2px solid rgba(0,0,0,.4);overflow:hidden}
+.hp-fill{height:100%;width:100%;background:linear-gradient(180deg,#ff6b6b,#e01f2d);transition:width .18s}
+.hp-text{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:800;text-shadow:0 1px 2px #000}
+.kill-counter{display:flex;align-items:center;gap:3px;background:rgba(0,0,0,.35);
+  border:2px solid rgba(255,255,255,.18);border-radius:10px;padding:4px 8px;font-size:14px;font-weight:800}
+.kill-counter small{opacity:.7;font-size:11px}
+
+.hud-row2{display:flex;align-items:center;gap:8px;margin-top:7px}
+.gold-pill{display:flex;align-items:center;gap:5px;background:rgba(0,0,0,.4);
+  border:2px solid rgba(255,210,74,.35);border-radius:99px;padding:3px 12px 3px 8px;
+  font-size:15px;font-weight:800;color:var(--gold)}
+.lvl-pill{flex:1;display:flex;align-items:center;gap:7px;background:rgba(0,0,0,.32);
+  border-radius:99px;padding:4px 10px;font-size:12px}
+.lvl-pill b{color:#9fe7ff}
+.xp-track{flex:1;height:6px;border-radius:99px;background:rgba(0,0,0,.5);overflow:hidden}
+.xp-fill{height:100%;width:0%;background:linear-gradient(90deg,#37d0ff,#9fe7ff);transition:width .2s}
+.combo-pill{font-size:12px;font-weight:800;color:var(--orange2);background:rgba(0,0,0,.32);
+  border-radius:99px;padding:4px 10px;opacity:.5;transition:opacity .2s,transform .2s}
+.combo-pill.active{opacity:1;transform:scale(1.06);text-shadow:0 0 10px rgba(255,179,71,.7)}
+
+/* ===================== ARENA (orman) ===================== */
+/* pixel art sprite render + emoji fallback */
+.px{image-rendering:pixelated;image-rendering:crisp-edges;object-fit:contain;display:inline-block;vertical-align:middle}
+.px-emoji{display:inline-flex;align-items:center;justify-content:center;line-height:1}
+/* spritesheet'ten tek kare keser */
+.px-sheet{display:inline-block;overflow:hidden;vertical-align:middle}
+.px-sheet > .px{object-fit:fill;max-width:none}
+/* canlı kare animasyonu (3 kareli yürüme döngüsü) */
+.px-anim{display:inline-block;background-repeat:no-repeat;image-rendering:pixelated;
+  vertical-align:middle;position:relative}
+.px-anim .probe{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.px-anim.idle{animation:spriteWalk .8s steps(3) infinite}
+.px-anim.idleSlow{animation:spriteWalk 1.1s steps(3) infinite}
+.px-anim.fast{animation:spriteWalk .32s steps(3) infinite}
+@keyframes spriteWalk{from{background-position-x:0}to{background-position-x:calc(-3 * var(--sz))}}
+/* yatay animasyon şeridi (hero/boss/düşman) */
+.px-strip{display:inline-block;background-repeat:no-repeat;image-rendering:pixelated;vertical-align:middle}
+@keyframes stripPlay{from{background-position-x:0}to{background-position-x:calc(-1 * var(--f) * var(--sz))}}
+
+/* boss portalı — spritesheet kare animasyonu */
+#portal{position:absolute;left:50%;margin-left:-90px;bottom:74px;width:180px;height:180px;z-index:2;pointer-events:none;
+  background-repeat:no-repeat;image-rendering:pixelated;
+  filter:drop-shadow(0 0 20px rgba(120,255,120,.7));
+  animation:portalAppear .4s ease}
+#portal.hidden{display:none}
+#portal.closing{animation:portalClose .35s ease forwards}
+@keyframes portalAppear{0%{transform:scale(.2);opacity:0}100%{transform:scale(1);opacity:1}}
+@keyframes portalClose{0%{transform:scale(1);opacity:1}100%{transform:scale(.15);opacity:0}}
+
+/* boss geri sayım */
+#countdown{position:absolute;left:50%;top:42%;transform:translate(-50%,-50%);z-index:10;pointer-events:none;
+  font-family:"Press Start 2P",monospace;font-size:60px;color:#fff;
+  text-shadow:3px 3px 0 #5a2ad0,0 0 18px #9a5cff}
+#countdown.hidden{display:none}
+#countdown.cd-pop{animation:cdPop .82s ease}
+@keyframes cdPop{0%{opacity:0;transform:translate(-50%,-50%) scale(2.2)}
+  30%{opacity:1;transform:translate(-50%,-50%) scale(1)}
+  100%{opacity:0;transform:translate(-50%,-50%) scale(.55)}}
+
+/* boss portaldan çıkış */
+#enemy.enter{animation:bossEnter .6s cubic-bezier(.2,1.4,.4,1)}
+@keyframes bossEnter{0%{opacity:0;transform:scale(.2) translateY(-26px)}60%{opacity:1;transform:scale(1.12)}100%{transform:scale(1)}}
+
+#arena{
+  position:relative;flex:1;overflow:hidden;min-height:0;image-rendering:pixelated;
+  transition:background .6s ease;
+  background:radial-gradient(120% 80% at 50% 8%, #cdeb66 0%, #7fb83c 18%, #4f9433 38%, #2f7030 62%, #1c5026 100%);
+}
+
+/* ===== KATMANLI PIXEL-ART SAHNE ===== */
+.scene{position:absolute;inset:0;pointer-events:none;background-repeat:no-repeat;
+  background-position:center top;background-size:cover;image-rendering:pixelated}
+#sc-sky{z-index:0}
+#sc-cel{z-index:0}                                   /* güneş/ay */
+#sc-far{z-index:1;background-position:center bottom;background-size:100% auto}
+#sc-mid{z-index:1;background-position:center bottom;background-size:100% auto}
+#sc-atmo{z-index:5;mix-blend-mode:screen;opacity:.5} /* sis/ışık/parçacık */
+#sc-deco{z-index:6;background-position:center bottom;background-size:100% auto} /* ön dekor */
+/* yumuşak parallax kayması */
+#sc-far{animation:driftFar 26s ease-in-out infinite alternate}
+#sc-mid{animation:driftMid 18s ease-in-out infinite alternate}
+@keyframes driftFar{from{transform:translateX(-6px)}to{transform:translateX(6px)}}
+@keyframes driftMid{from{transform:translateX(7px)}to{transform:translateX(-7px)}}
+
+/* zemin platformu — bölüme göre renk */
+#arena.z-cave    #platform{background:linear-gradient(180deg,#3a3550,#211d33);border-top-color:#5a4f7a;box-shadow:inset 0 6px 0 #4a4068,0 -2px 10px rgba(0,0,0,.4)}
+#arena.z-cave    #platform::before{background:repeating-linear-gradient(90deg,#544a73 0 14px,#463d63 14px 28px)}
+#arena.z-snow    #platform{background:linear-gradient(180deg,#dff1ff,#a9cfe6);border-top-color:#fff;box-shadow:inset 0 6px 0 #eaf7ff,0 -2px 10px rgba(0,0,0,.2)}
+#arena.z-snow    #platform::before{background:repeating-linear-gradient(90deg,#ffffff 0 14px,#e3f2ff 14px 28px)}
+#arena.z-desert  #platform{background:linear-gradient(180deg,#e8b06a,#c5854a);border-top-color:#f2cd8a;box-shadow:inset 0 6px 0 #e8bd76,0 -2px 10px rgba(0,0,0,.3)}
+#arena.z-desert  #platform::before{background:repeating-linear-gradient(90deg,#f2cd8a 0 14px,#e6bd78 14px 28px)}
+#arena.z-volcano #platform{background:linear-gradient(180deg,#3a1c18,#1c0c0a);border-top-color:#ff6a2b;box-shadow:inset 0 6px 0 #7a2a18,0 -2px 12px rgba(255,80,20,.4)}
+#arena.z-volcano #platform::before{background:repeating-linear-gradient(90deg,#5a241a 0 12px,#ff5a1e 12px 16px,#5a241a 16px 28px)}
+#arena.z-castle  #platform{background:linear-gradient(180deg,#4a4560,#2a2640);border-top-color:#6a6488;box-shadow:inset 0 6px 0 #564f74,0 -2px 10px rgba(0,0,0,.4)}
+#arena.z-castle  #platform::before{background:repeating-linear-gradient(90deg,#5e577e 0 26px,#4a4566 26px 30px)}
+
+/* zemin platformu */
+#platform{position:absolute;left:0;right:0;bottom:0;height:84px;z-index:2;
+  background:
+    linear-gradient(180deg, #6a4a24, #3c2a16);
+  border-top:5px solid #57913a;
+  box-shadow:inset 0 6px 0 #4a7d31, 0 -2px 10px rgba(0,0,0,.3);}
+#platform::before{content:"";position:absolute;top:-5px;left:0;right:0;height:10px;
+  background:repeating-linear-gradient(90deg,#6cb142 0 14px,#5a973a 14px 28px)}
+
+/* yan platformlar (dostlar için) */
+.ledge{position:absolute;bottom:74px;width:30%;height:18px;z-index:2;border-radius:8px 8px 0 0;
+  background:linear-gradient(180deg,#6cb142,#4a7d31);border-top:3px solid #7fc94f;
+  box-shadow:0 6px 0 #3c2a16, inset 0 2px 0 rgba(255,255,255,.2)}
+#ledge-left{left:0;border-top-left-radius:0}
+#ledge-right{right:0;border-top-right-radius:0}
+#arena.z-cave .ledge{background:linear-gradient(180deg,#3a3550,#211d33);border-top-color:#5a4f7a;box-shadow:0 6px 0 #1a1626,inset 0 2px 0 rgba(255,255,255,.08)}
+#arena.z-snow .ledge{background:linear-gradient(180deg,#dff1ff,#a9cfe6);border-top-color:#fff;box-shadow:0 6px 0 #8fb6cc}
+#arena.z-desert .ledge{background:linear-gradient(180deg,#e8b06a,#c5854a);border-top-color:#f2cd8a;box-shadow:0 6px 0 #a86a3a}
+#arena.z-volcano .ledge{background:linear-gradient(180deg,#3a1c18,#1c0c0a);border-top-color:#ff6a2b;box-shadow:0 6px 0 #1a0808}
+#arena.z-castle .ledge{background:linear-gradient(180deg,#4a4560,#2a2640);border-top-color:#6a6488;box-shadow:0 6px 0 #15101e}
+
+/* dost sıraları (sol & sağ) */
+.ally-row{position:absolute;bottom:90px;z-index:4;display:flex;align-items:flex-end;gap:2px}
+#allies-left{left:13%;flex-direction:row}
+#allies-right{right:3%;flex-direction:row-reverse}
+
+/* düşman — ORTADA */
+#enemy-wrap{position:absolute;left:50%;bottom:90px;transform:translateX(-50%);z-index:3;text-align:center}
+#enemy{width:140px;height:140px;display:flex;align-items:center;justify-content:center;
+  font-size:108px;cursor:pointer;line-height:1;filter:drop-shadow(0 8px 10px rgba(0,0,0,.45));
+  transition:transform .06s;animation:bob 2.4s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+#enemy:active{transform:scale(.94)}
+#enemy.hit{animation:enemyHit .18s ease}
+@keyframes enemyHit{0%{transform:scale(1)}40%{transform:scale(.9) rotate(-3deg);filter:brightness(2.4) drop-shadow(0 0 22px #fff)}100%{transform:scale(1)}}
+#enemy.dead{animation:enemyDie .5s ease forwards}
+@keyframes enemyDie{0%{transform:scale(1);opacity:1}100%{transform:scale(.2) rotate(40deg);opacity:0}}
+#enemy-shadow{width:90px;height:16px;border-radius:50%;background:rgba(0,0,0,.3);margin:2px auto 0;filter:blur(3px)}
+
+/* kahraman */
+#hero{position:absolute;left:13%;bottom:80px;z-index:4;font-size:60px;line-height:1;
+  filter:drop-shadow(0 6px 8px rgba(0,0,0,.5));transform-origin:bottom center;animation:bob 2.8s ease-in-out infinite}
+#hero-icon{position:relative;z-index:2}
+#hero-icon .px-strip{transform:translateY(8px)}   /* ayağı zemine otursun */
+#hero-aura{position:absolute;left:50%;top:50%;width:170px;height:170px;transform:translate(-50%,-50%);
+  border-radius:50%;z-index:1;background:radial-gradient(circle, rgba(255,138,30,.45), transparent 65%);
+  animation:auraPulse 2.2s ease-in-out infinite}
+@keyframes auraPulse{0%,100%{transform:translate(-50%,-50%) scale(.85);opacity:.55}50%{transform:translate(-50%,-50%) scale(1.15);opacity:1}}
+#hero.attack{animation:heroAttack .25s ease}
+@keyframes heroAttack{0%{transform:translateY(0)}45%{transform:translateX(28px) translateY(-10px) scale(1.05)}100%{transform:translateY(0)}}
+#hero.jutsu{animation:heroJutsu .42s cubic-bezier(.3,1.4,.5,1)}
+@keyframes heroJutsu{0%{transform:translateY(0)}30%{transform:translateX(40px) translateY(-30px) scale(1.16) rotate(-7deg)}100%{transform:translateY(0)}}
+#hero-shadow{position:absolute;left:13%;bottom:78px;width:90px;height:16px;transform:translateX(20px);
+  border-radius:50%;background:rgba(0,0,0,.32);filter:blur(3px);z-index:3}
+
+/* yardımcı element petleri */
+#pets-field{position:absolute;left:2%;bottom:92px;z-index:4;display:flex;gap:2px;align-items:flex-end}
+.pet{position:relative;font-size:28px;line-height:1;filter:drop-shadow(0 4px 5px rgba(0,0,0,.5));
+  animation:petBob 2s ease-in-out infinite}
+.pet:nth-child(2){animation-delay:.3s}
+.pet:nth-child(3){animation-delay:.6s}
+.pet:nth-child(4){animation-delay:.9s}
+.pet:nth-child(5){animation-delay:1.2s}
+@keyframes petBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.pet.act{animation:petAtk .3s ease}
+@keyframes petAtk{0%{transform:translateY(0)}50%{transform:translateX(14px) translateY(-4px) scale(1.12)}100%{transform:translateY(0)}}
+#allies-right .pet.act{animation:petAtkL .3s ease}
+@keyframes petAtkL{0%{transform:translateY(0)}50%{transform:translateX(-14px) translateY(-4px) scale(1.12)}100%{transform:translateY(0)}}
+.pet::after{content:"";position:absolute;left:50%;top:50%;width:34px;height:34px;transform:translate(-50%,-50%);
+  border-radius:50%;z-index:-1;background:radial-gradient(circle,var(--pc,#fff),transparent 65%);opacity:.4}
+
+#stage-banner{position:absolute;top:64px;left:50%;transform:translateX(-50%);z-index:8;
+  font-family:"Bangers",cursive;font-size:30px;letter-spacing:.04em;color:#fff;
+  text-shadow:0 2px 0 #b3500c,0 0 16px rgba(255,138,30,.8);opacity:0;pointer-events:none}
+#stage-banner.show{animation:banner 1.6s ease forwards}
+@keyframes banner{0%{opacity:0;transform:translate(-50%,14px) scale(.8)}20%{opacity:1;transform:translate(-50%,0) scale(1)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-12px)}}
+
+/* boss zamanlayıcı */
+#boss-timer{position:absolute;top:96px;left:50%;transform:translateX(-50%);z-index:8;
+  display:flex;flex-direction:column;align-items:center;gap:3px;pointer-events:none}
+#boss-timer.hidden{display:none}
+#boss-timer .bt-bar{width:180px;height:12px;border-radius:99px;background:rgba(0,0,0,.55);
+  border:2px solid rgba(0,0,0,.4);overflow:hidden}
+#boss-bar{height:100%;width:100%;background:linear-gradient(90deg,#ffd24a,#ff8a1e);transition:width .1s linear}
+#boss-bar.low{background:linear-gradient(90deg,#ff5a4d,#ff2030);animation:lowPulse .5s infinite}
+@keyframes lowPulse{0%,100%{opacity:1}50%{opacity:.6}}
+#boss-text{font-family:"Bangers",cursive;font-size:20px;color:#fff;text-shadow:0 2px 0 #b3500c,0 0 10px rgba(255,138,30,.7)}
+
+#combo-flash{position:absolute;inset:0;pointer-events:none;z-index:5;opacity:0;
+  background:radial-gradient(circle at 58% 50%, var(--flash,#ff8a1e), transparent 60%)}
+#combo-flash.go{animation:flash .45s ease}
+@keyframes flash{0%{opacity:0}25%{opacity:.5}100%{opacity:0}}
+
+#float-layer,#particle-layer{position:absolute;inset:0;pointer-events:none;z-index:9}
+.dmg{position:absolute;font-family:"Bangers",cursive;text-shadow:0 2px 6px #000;
+  animation:floatUp 1s ease forwards;white-space:nowrap}
+.dmg.basic{font-size:28px;color:#fff}
+.dmg.jutsu{font-size:50px;color:var(--orange2)}
+.dmg.auto{font-size:20px;color:#bfa6ff}
+.dmg.crit{color:var(--gold)}
+.dmg.special{font-size:62px;color:#fff;text-shadow:0 0 12px var(--orange2),0 3px 6px #000;animation:floatBig 1.2s ease forwards}
+@keyframes floatBig{0%{opacity:0;transform:translateY(0) scale(.4)}18%{opacity:1;transform:translateY(-12px) scale(1.3)}100%{opacity:0;transform:translateY(-110px) scale(1.05)}}
+@keyframes floatUp{0%{opacity:0;transform:translateY(0) scale(.6)}15%{opacity:1;transform:translateY(-10px) scale(1.1)}100%{opacity:0;transform:translateY(-90px) scale(1)}}
+.spark{position:absolute;width:10px;height:10px;border-radius:50%;background:var(--sc,#ffb347);
+  box-shadow:0 0 10px var(--sc,#ffb347);animation:spark .6s ease forwards}
+@keyframes spark{0%{opacity:1;transform:translate(0,0) scale(1)}100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(.2)}}
+
+/* ===================== DOCK ===================== */
+#dock{background:var(--dock);border-top:3px solid #15101e;display:flex;flex-direction:column;z-index:15}
+#tab-content{position:relative}
+.panel{padding:5px 8px 7px}
+.panel.hidden{display:none}
+.panel-head{display:flex;align-items:center;justify-content:space-between;
+  font-size:15px;font-weight:800;color:#fff;padding:4px 4px 8px}
+.ph-gold{color:var(--gold);font-size:14px}
+
+/* --- skill bar (yuvarlak ikonlar) --- */
+#skill-bar{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;padding:2px 0 5px}
+.skill-orb{position:relative;width:42px;height:42px;border-radius:50%;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;font-size:20px;
+  background:radial-gradient(circle at 35% 28%, rgba(255,255,255,.45), transparent 60%), var(--oc,#888);
+  border:3px solid rgba(0,0,0,.35);box-shadow:inset 0 -4px 8px rgba(0,0,0,.35),0 2px 4px rgba(0,0,0,.4);
+  transition:transform .08s}
+.skill-orb:active{transform:scale(.9)}
+.skill-orb.locked{filter:grayscale(.85) brightness(.55);cursor:default}
+.skill-orb.locked::after{content:"🔒";position:absolute;font-size:16px;filter:none}
+.skill-orb.locked span{opacity:0}
+.skill-orb.active{border-color:#fff;box-shadow:0 0 0 3px rgba(255,255,255,.35),0 0 14px var(--oc,#fff)}
+.skill-orb.charged{border-color:#fff;animation:orbCharge .55s ease-in-out infinite}
+@keyframes orbCharge{0%,100%{box-shadow:0 0 0 3px rgba(255,255,255,.55),0 0 12px var(--oc,#fff);transform:scale(1)}
+  50%{box-shadow:0 0 0 7px rgba(255,255,255,.18),0 0 28px var(--oc,#fff),0 0 44px #fff;transform:scale(1.1)}}
+.skill-orb.charged::before{content:"⚡";position:absolute;top:-9px;left:-7px;font-size:16px;z-index:3;
+  filter:drop-shadow(0 0 5px #ffe14a);animation:orbBolt .55s ease-in-out infinite}
+@keyframes orbBolt{0%,100%{transform:scale(1) rotate(-8deg)}50%{transform:scale(1.25) rotate(8deg)}}
+.skill-orb .lvtag{position:absolute;bottom:-4px;right:-4px;background:#15101e;color:#ffd24a;
+  font-size:9px;font-weight:800;border-radius:99px;padding:1px 5px;border:2px solid var(--oc,#888)}
+
+.active-line{display:flex;align-items:center;gap:8px;justify-content:center;padding:1px 0 4px}
+.jutsu-icon{font-size:26px;filter:drop-shadow(0 0 8px rgba(255,138,30,.6))}
+.jutsu-titles{display:flex;flex-direction:column;line-height:1.15;max-width:62%}
+.jutsu-jp{font-size:14px;color:var(--orange2);font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.jutsu-name{font-size:10px;color:var(--muted);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* --- el işareti dizisi --- */
+.hand{width:100%;height:100%;display:block;color:#f4d9b0}
+.seq-seal .hand{color:#9a8fb5}
+.seq-seal.done .hand{color:var(--good)}
+.seq-seal.next .hand{color:var(--orange2)}
+/* özel vuruş alevi (skill renginde) */
+.flame{position:absolute;width:90px;height:130px;transform:translate(-50%,-65%);pointer-events:none;
+  background:radial-gradient(ellipse 50% 60% at 50% 75%, #fff 0%, var(--fc,#ff8a1e) 38%, transparent 72%);
+  border-radius:50% 50% 42% 42% / 60% 60% 40% 40%;mix-blend-mode:screen;
+  animation:flameUp .7s ease-out forwards}
+@keyframes flameUp{
+  0%{opacity:0;transform:translate(-50%,-45%) scale(.4)}
+  25%{opacity:1;transform:translate(-50%,-65%) scale(1.05)}
+  60%{opacity:.9;transform:translate(-50%,-78%) scale(1.15) skewX(-4deg)}
+  100%{opacity:0;transform:translate(-50%,-95%) scale(1.25) skewX(3deg)}}
+/* mühür sırası göstergesi — TOPRAK alanda (arena içinde, ortada) */
+#seal-sequence.seal-sequence{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);
+  z-index:6;display:flex;gap:7px;justify-content:center;flex-wrap:nowrap;margin:0;
+  background:rgba(0,0,0,.42);border:2px solid rgba(0,0,0,.35);border-radius:6px;padding:5px 8px}
+.seq-seal{width:46px;height:54px;border-radius:11px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:1px;background:rgba(0,0,0,.28);
+  border:2px solid rgba(255,255,255,.1);position:relative;transition:all .15s;padding:3px}
+.seq-seal .hand{width:34px;height:34px}
+.seq-seal .r{font-size:8px;color:var(--muted);font-weight:800}
+.seq-seal.done{background:rgba(125,255,138,.16);border-color:var(--good)}
+.seq-seal.done .r{color:var(--good)}
+.seq-seal.next{border-color:var(--orange);box-shadow:0 0 0 3px rgba(255,138,30,.3);animation:pulse 1s infinite}
+.seq-seal.next .r{color:var(--orange2)}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 3px rgba(255,138,30,.3)}50%{box-shadow:0 0 0 6px rgba(255,138,30,.06)}}
+
+/* --- mühür tuş takımı: 3 SOL / 3 SAĞ (iki elle rahat) --- */
+#seal-pad{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;padding:0 2px}
+.pad-group{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;flex:1}
+.seal-btn{position:relative;border-radius:13px;border:2px solid rgba(255,255,255,.1);
+  background:linear-gradient(180deg,var(--dock2),#231c33);color:#fff;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  padding:4px 3px 3px;font-family:inherit;transition:transform .05s,box-shadow .12s,border-color .12s}
+.seal-btn .hand{width:36px;height:36px}
+.seal-btn .seal-name{font-size:10px;font-weight:800;color:var(--muted);letter-spacing:.04em}
+.seal-btn .keyhint{position:absolute;top:3px;right:7px;font-size:9px;color:var(--muted);opacity:.7}
+.seal-btn:active{transform:scale(.93)}
+.seal-btn.correct{animation:goodTap .3s ease}
+@keyframes goodTap{0%{box-shadow:0 0 0 0 rgba(125,255,138,.6);border-color:var(--good)}100%{box-shadow:0 0 0 14px rgba(125,255,138,0)}}
+.seal-btn.wrong{animation:badTap .3s ease}
+@keyframes badTap{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px);border-color:var(--hp)}60%{transform:translateX(6px)}}
+.seal-btn.hint-next{border-color:var(--orange);box-shadow:0 0 0 2px rgba(255,138,30,.35)}
+
+/* --- geliştirme kartları (Tap Titans stili) --- */
+.card-list{display:flex;flex-direction:column;gap:9px;max-height:240px;overflow-y:auto;padding-right:2px}
+.card{display:flex;align-items:center;gap:10px;background:var(--card);border-radius:14px;
+  padding:9px 10px;border:1px solid rgba(255,255,255,.06)}
+.card.locked{opacity:.6}
+.card-thumb{width:48px;height:48px;border-radius:11px;flex-shrink:0;display:flex;align-items:center;
+  justify-content:center;font-size:26px;background:radial-gradient(circle at 35% 28%, rgba(255,255,255,.4), transparent 60%), var(--oc,#555);
+  border:2px solid rgba(0,0,0,.3)}
+.card-mid{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.card-name{font-size:14px;font-weight:800;color:#fff}
+.card-lv{font-size:11px;color:#ffd24a;font-weight:800}
+.card-desc{font-size:10.5px;color:#b9b0cf;font-weight:600;line-height:1.25}
+.card-btn{flex-shrink:0;min-width:80px;border:none;border-radius:11px;padding:8px 10px;cursor:pointer;
+  font-family:inherit;font-weight:800;color:#3a2400;background:linear-gradient(180deg,var(--orange2),var(--orange));
+  display:flex;flex-direction:column;align-items:center;line-height:1.1;box-shadow:0 3px 0 #b3500c}
+.card-btn:active{transform:translateY(2px);box-shadow:0 1px 0 #b3500c}
+.card-btn .bt-cost{font-size:13px}
+.card-btn .bt-sub{font-size:9px;opacity:.85}
+.card-btn.locked,.card-btn:disabled{background:#4a4360;color:#9a92b0;box-shadow:0 3px 0 #2a2640;cursor:not-allowed}
+.card-btn.select{background:linear-gradient(180deg,#7dff8a,#2fbf52);color:#063b12;box-shadow:0 3px 0 #1a7d30}
+.card-btn.active-tag{background:#2e2540;color:#7dff8a;box-shadow:0 3px 0 #15101e}
+
+#stats-list{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:4px}
+.stat{background:var(--card);border-radius:12px;padding:10px 12px}
+.stat .k{font-size:11px;color:#b9b0cf}
+.stat .v{font-size:18px;font-weight:800;color:#fff}
+
+/* --- tab bar --- */
+#tab-bar{display:grid;grid-template-columns:repeat(5,1fr);gap:2px;background:#15101e;padding:5px 5px calc(5px + env(safe-area-inset-bottom))}
+.tab{position:relative;border:none;background:transparent;color:#fff;cursor:pointer;font-family:inherit;
+  display:flex;flex-direction:column;align-items:center;gap:2px;padding:7px 0 5px;font-size:19px;border-radius:10px;
+  border-bottom:3px solid transparent;opacity:.6;transition:.15s}
+.tab small{font-size:9px;font-weight:800;letter-spacing:.06em}
+.tab.active{opacity:1;background:rgba(255,255,255,.05);border-bottom-color:var(--tc)}
+
+#app.shake{animation:shake .3s ease}
+@keyframes shake{0%,100%{transform:translate(0,0)}20%{transform:translate(-4px,2px)}40%{transform:translate(4px,-2px)}60%{transform:translate(-3px,-2px)}80%{transform:translate(3px,2px)}}
+
+/* ============================================================
+   PIXEL ART TEMA + YER KOMBO GÖSTERGESİ
+   ============================================================ */
+body{font-family:"VT323",monospace;font-size:19px;letter-spacing:.02em}
+.hud-value,.enemy-name,.kill-counter,.hp-text,.gold-pill,.lvl-pill,
+.panel-head,.card-name,.card-btn,.tab small,.jutsu-jp,.seal-name,
+#stage-banner,#boss-text,.dmg,.cg-x,.cg-lbl,.cg-ready,.combo-x,.combo-label{
+  font-family:"Press Start 2P",monospace;-webkit-font-smoothing:none}
+.hud-value{font-size:15px}
+.enemy-name{font-size:10px}
+.hp-text{font-size:9px}
+.kill-counter{font-size:11px}
+.kill-counter small{font-size:8px}
+.gold-pill{font-size:12px}
+.lvl-pill{font-size:9px}
+.panel-head{font-size:11px}
+.card-name{font-size:10px;line-height:1.35}
+.card-lv,.card-desc,.jutsu-name,#tip{font-family:"VT323",monospace;font-size:15px;line-height:1.05}
+.card-btn .bt-cost{font-size:9px}
+.card-btn .bt-sub{font-size:6px}
+.tab small{font-size:6.5px}
+.jutsu-jp{font-size:10px}
+.seal-name{font-size:7px}
+.stat .k{font-family:"VT323",monospace;font-size:14px}
+.stat .v{font-family:"Press Start 2P",monospace;font-size:13px}
+#stage-banner{font-size:14px;text-shadow:2px 2px 0 #b3500c}
+#boss-text{font-size:13px;text-shadow:2px 2px 0 #b3500c}
+.dmg.basic{font-size:15px}.dmg.jutsu{font-size:22px}.dmg.special{font-size:26px}
+.dmg.auto{font-size:13px}.dmg.crit{font-size:15px}
+/* köşeli / bloklu kenarlar (orb'lar yuvarlak kalır) */
+.hud-cell,.icon-btn,.kill-counter,.gold-pill,.lvl-pill,.hp-track,.xp-track,
+.card,.card-thumb,.card-btn,.seal-btn,.seq-seal,#shop-btn,#swap-btn,.tab,.sheet,.stat,
+#boss-timer .bt-bar{border-radius:3px !important}
+#combo-pill{display:none !important}   /* HUD kombo hapı gizli — artık yerde */
+
+/* kombo göstergesi — skillerin hemen üstünde (haritanın alt kenarı), yatay şerit */
+#combo-ground{position:absolute;left:50%;bottom:76px;transform:translateX(-50%);z-index:6;
+  display:flex;align-items:center;gap:9px;pointer-events:none;
+  background:rgba(0,0,0,.5);border:2px solid rgba(255,255,255,.15);border-radius:4px;
+  padding:5px 12px;text-shadow:2px 2px 0 #000}
+#combo-ground .cg-x{font-size:24px;color:#ffb347;line-height:1}
+#combo-ground .cg-lbl{font-size:8px;color:#cdebc0;letter-spacing:.2em}
+#combo-ground .cg-pips{display:flex;gap:5px}
+#combo-ground .cg-pips i{width:13px;height:13px;display:block;background:rgba(0,0,0,.55);
+  border:2px solid rgba(255,255,255,.3)}
+#combo-ground.ready{border-color:#fff;box-shadow:0 0 14px rgba(255,210,74,.6)}
+#combo-ground .cg-pips i.on{background:#ffd24a;border-color:#fff;box-shadow:0 0 7px #ffd24a}
+#combo-ground.active .cg-x{color:#ffd24a}
+#combo-ground.ready .cg-x{color:#fff;animation:cgReady .5s infinite}
+#combo-ground .cg-ready{font-size:11px;color:#fff;animation:cgReady .5s infinite}
+@keyframes cgReady{0%,100%{opacity:1}50%{opacity:.45}}

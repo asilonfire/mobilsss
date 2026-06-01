@@ -1,0 +1,13 @@
+# Cloudflare tünel logları (geçici, repoya girmesin)
+cf.err.log
+cf.out.log
+url.txt
+
+# OS / editör
+Thumbs.db
+desktop.ini
+.DS_Store
+.vscode/
+
+# Yardımcı not dosyaları
+assets/portals/BURAYA_PORTAL_AT.txt
