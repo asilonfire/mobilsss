@@ -29,12 +29,25 @@
 
 ## 🎮 OYUN NEDİR
 
-**Shinobi Tap** — Naruto temalı, Tap Titans tarzı tap/idle mobil web oyunu.
-Saf **HTML + CSS + JS** (bağımlılık yok). `index.html`'i tarayıcıda aç → çalışır.
+**Shinobi 2048 — Mühür Akışı** — Naruto temalı, **2048 tarzı kaydır-birleştir**
+chill mobil web oyunu. Saf **HTML + CSS + JS** (bağımlılık yok). `index.html`'i
+tarayıcıda aç → çalışır.
 
-**Çekirdek döngü:** Düşmana dokun = temel saldırı. Aktif jutsu'nun **el mührü
-(seal) kombosunu** sırayla tapla → jutsu tetiklenir, büyük hasar. Altın (ryō) ile
-jutsu/dost/güç aç & yükselt. Her 10. düşman = **BOSS** (portal + 3-2-1 + süre limiti).
+> **NOT (2026-06-03 pivot):** Oyun eski "Shinobi Tap" (tap/idle + seal combo)
+> mantığından TAMAMEN çıkarıldı. Kullanıcı "akıcı, sürekli oynanabilen, popüler,
+> chill bir mini oyun" istedi → 2048 birleştirme + canavara hasar melezine geçildi.
+
+**Çekirdek döngü (ROGUELITE — "öl, güçlen, daha ileri git"):** 4×4 tahtada
+parmakla kaydır → aynı hayvan mühürleri birleşir ve **burç zincirinde** bir üst
+kademeye çıkar (Fare→…→Domuz → sonra 6 **JUTSU karosu**). **Her birleştirme =
+üstteki canavara hasar.** Jutsu karosu oluşturunca **patlar, 3×3'ü (taşlar dahil)
+süpürür** + büyük hasar. Canavar **ara sıra tahtaya kilitli taş 🪨 bırakır**
+(saldırısı). Canavar ölünce ryō + aşama artar (her 5. aşama BOSS).
+
+**AKIŞ (run) döngüsü:** Tahta **tıkanırsa AKIŞ BİTER** → aşama 1'e döner. Kazanılan
+**ryō kalıcıdır** → **GÜÇ** sekmesinden hasar/jutsu/taş-direnci yükselt (kalıcı) →
+sonraki akışta daha ileri. **En iyi skor + en iyi aşama + son 5 akış** İSTAT'ta.
+İlerleme **localStorage**'a kaydedilir (kalıcı meta + güncel akış ayrı).
 
 ---
 
@@ -42,9 +55,9 @@ jutsu/dost/güç aç & yükselt. Her 10. düşman = **BOSS** (portal + 3-2-1 + s
 
 | Dosya | İçerik |
 |---|---|
-| `index.html` | Yapı: HUD, arena (sahne katmanları), dock (5 sekme), `?v=NN` cache sürümü |
-| `style.css` | Tüm görsel: pixel-art tema, sahne katmanları, animasyonlar |
-| `game.js` | Tüm mantık: combo, jutsu, dostlar, boss, portal, sahne üretici |
+| `index.html` | Yapı: HUD, arena (sahne katmanları + canavar), dock (OYUN/GÜÇ/İSTAT sekmeleri), 4×4 tahta, `?v=NN` cache sürümü |
+| `style.css` | Tüm görsel: pixel-art tema, sahne katmanları, **tahta + karo + jutsu efektleri** (en altta "SHINOBI 2048" bölümü) |
+| `game.js` | Tüm mantık: **2048 birleştirme motoru** (`move`/`actuate`), karo kademeleri (`TIERS`), birleştirme→hasar (`resolveMerges`), canavar, sahne üretici, localStorage (`save`/`load`) |
 | `assets/hero/` | `IDLE.png` (10 kare), `ATTACK 1.png` (7 kare), `HURT.png` (4 kare) — yatay şerit |
 | `assets/enemies/` | `Enemy NN-1.png` (3×4 RPG Maker sheet), `rat-idle.png` (6 kare şerit), Goblin'ler |
 | `assets/bosses/` | `Boss 01.png` (3×4, satır=boss), `cassidle.png` (7 kare şerit) |
@@ -54,40 +67,102 @@ jutsu/dost/güç aç & yükselt. Her 10. düşman = **BOSS** (portal + 3-2-1 + s
 
 ---
 
-## ⚙️ MEVCUT DURUM (2026-06-02)
+## ⚙️ MEVCUT DURUM (2026-06-03) — 2048 PİVOTU, İLK PROTOTİP
 
 **Çalışan sistemler:**
-- ✅ 12 el mührü (tek renk pixel-art hayvan ikonları), seal combo girişi
-- ✅ 6 jutsu (Katon, Chidori, Kage Bunshin, Suiton, Rasengan, Rasenshuriken)
-- ✅ Skill bar: **sadece açık jutsular** (kilitliler JUTSU sekmesinde)
-- ✅ Mühür tuş takımı: **3 sol / 3 sağ** (iki elle basım)
-- ✅ Mühür sırası göstergesi + kombo göstergesi **toprak alanda** (arena içinde)
-- ✅ Özel vuruş: 3 ardışık combo → orb ⚡ parlar → basınca ×4 + skill renginde alev
-- ✅ Kombo sıfırlama: yanlış mühür VEYA 2.5 sn boşta → tamamen başa döner
-- ✅ Dostlar (ally, 6 adet) — sol/sağ platformlara dizilir, otomatik hasar
-- ✅ Boss girişi: "BOSS GELİYOR" + portal animasyonu + 3-2-1 + boss çıkış efekti
-- ✅ Boss süre limiti 30 sn; dolarsa 10'luk seri başa döner
-- ✅ 6 bölüm (zone): prosedürel **katmanlı pixel-art sahne** (gök+dağ+ağaç/yapı+sis+parallax)
-- ✅ Hero: yeni sprite (IDLE) + saldırıda ATTACK animasyonu, boyut ~190px
-- ✅ Pixel-art tema (Press Start 2P + VT323 fontlar)
+- ✅ 4×4 2048 birleştirme motoru: kaydır (dokunmatik + ok tuşları + WASD + fare sürükle), akıcı transform geçişli kaydırma, spawn pop, merge pop
+- ✅ Birleştirme zinciri: 12 hayvan (burç) + 6 jutsu karosu = 18 kademe (`TIERS`)
+- ✅ Her birleştirme canavara hasar (`resolveMerges`→`dealDamage`); jutsu karosu = büyük patlama + alev + banner
+- ✅ Combo: tek kaydırmada N birleştirme → çarpan (1 + 0.4·(N-1))
+- ✅ Canavar HP + yenince ryō + aşama artışı; her 5. aşama BOSS (portal + 3-2-1)
+- ✅ 6 prosedürel pixel-art sahne (eski sahne üretici korundu), her 3 aşamada bölge değişir
+- ✅ GÜÇ mağazası: Çakra Gücü (+%18 hasar) + Mühür Ustalığı (+%25 jutsu)
+- ✅ İSTAT sekmesi, HUD (aşama/skor/ryō/combo), canavar HP barı
+- ✅ **localStorage kayıt** (tahta + ryō + güç + aşama) + "Çakra Tükendi" ekranı (yalnız tahta sıfırlanır)
+- ✅ Birleştirme motoru node ile birim-test edildi (klasik 2048 vakaları geçti)
 
-**Bilinen / izlenecek:**
-- Sprite fallback: dosya yoksa emoji gösterir (oyun bozulmaz).
-- İlerleme **kaydedilmiyor** (localStorage yok) — sayfa yenilenince sıfırlanır. (Olası sıradaki iş.)
-- `index.html` cache sürümü şu an: **?v=15** (style.css & game.js).
+**Bilinen / izlenecek (DENGE + CİLA gerekli):**
+- ⚖️ **Sayı dengesi tahmini** — hasar/HP/maliyet eğrileri test edilip ayarlanmalı (canavar çok yavaş/hızlı ölebilir). `tileValue`, `enemyMaxHp`, `dmgMult` ile oyna.
+- Karo→hedef "kayıp karo" birleşmede hedefe doğru kayıyor ama kaynak karo görsel kaymıyor (sadece soluyor) — istenirse cilalanır.
+- Ses yok. Jutsu karoları emoji ikon kullanıyor (assets/jutsu/ klasörü yok, sorun değil).
+- Tarayıcıda gerçek el-testi yapılmadı (sandbox localhost'a curl atamadı; kullanıcı test edecek).
+- `index.html` cache sürümü şu an: **?v=22** (style.css & game.js).
+- **ÖZEL KAROLAR (v22):** doğal spawn'da düşük şansla — 🃏 joker (her şeyle birleşir,
+  `wild`), 🪙 altın (birleşince ryō, `gold`), 💣 bomba (birleşince 3×3 patlar, `bomb`/`detonate`).
+  Bayraklar merge'de sonuca taşınır (`_gold`/`_bomb`), kayıt/undo'da bitmask 4. eleman olarak
+  saklanır. `isGameOver` joker'i komşu-birleşme sayar. Tek-renk test `/tmp/tw.js` ile doğrulandı.
+- **AKTİF YETENEKLER (v21):** her akış sınırlı kullanım, ryō ile aç/geliştir (YETENEK sekmesi),
+  her seviye +1 kullanım/akış, **max 5 seviye, pahalı** (`ABILITIES.base·grow^lvl`, grow~2.0).
+  Tahtanın üstünde yetenek çubuğu (`#ability-bar`, kilitliyse gizli). Yetenekler:
+  🪨 Taş Kırma (en pahalı, base1200) · 💥 Çakra Bombası (%60 max HP) · 🔀 Karıştır · ↩️ Geri Al.
+  `useAbility/abStone/abShuffle/abBomb/abUndo`, `snapshot/restoreSnap` (undo). Charges akışla kaydolur.
+- **DENGE (v20, headless simülasyonla ayarlandı — `/tmp/sim2.js` mantığı):**
+  HP=`60·1.08^(stage-1)` (boss×4), hasar=`1+0.40·mergeLvl`, jutsu=`+0.25·masteryLvl`,
+  taş her `(boss?6:10)+stoneLvl` hamlede. İlk akış ~aşama 5; meta r1→r20: 5→17.
+- **Dinamik tahta:** `N` artık değişken (`let N`), `applyBoardSize()` ile 4→6 arası.
+  Geniş Tahta yükseltmesi sonraki akıştan geçerli. Kayıtta `boardSize` (meta) + `runN` (akış) ayrı.
 
 ---
 
 ## 📝 SIRADAKİ / YAPILACAKLAR (öneri havuzu)
-- [ ] **localStorage kaydı** (ilerleme kalıcı olsun)
-- [ ] Portal görselini boyut/konum ince ayarı
-- [ ] Daha fazla jutsu / dost / boss çeşidi
-- [ ] Ses efektleri
+- [ ] **Denge ayarı** (kullanıcı testinden sonra): hasar/HP/maliyet eğrileri
+- [ ] Birleşen kaynak karonun hedefe doğru kayma animasyonu (cila)
+- [ ] Canavarın da hafif "saldırısı" (örn. ara sıra tahtaya engel karo) — ama chill kalsın
+- [ ] Jutsu karosu fırlatma efektini hero'dan canavara giden mermi gibi yap
+- [ ] Ses efektleri (kaydır/birleştir/jutsu) — lo-fi ambiyans
+- [ ] Çevrimdışı/idle kazanç, günlük ödül
 - [ ] Kalıcı yayın (Cloudflare Pages / Netlify — sabit URL)
 
 ---
 
 ## 🧠 SON OTURUM ÖZETİ
+
+**2026-06-03 (devam 4) — ÖZEL KAROLAR (v22)**
+- Kullanıcı isteğiyle 3 özel karo eklendi: 🃏 joker / 🪙 altın / 💣 bomba. Merge motoru
+  joker (her kademeyle birleşir) + bayrak taşıma destekleyecek şekilde genişletildi.
+  resolveMerges altın ödülü + bomba patlamasını işler. Görsel: rainbow joker, parıltılı badge.
+- Sıradaki öneri havuzu: Perk/Kart draft · ses+lo-fi · boss mekanikleri · gerçek skor tablosu.
+
+**2026-06-03 (devam 3) — AKTİF YETENEKLER (v21)**
+- Kullanıcı isteği: her akış sınırlı kullanımlı, parayla açılıp geliştirilen yetenekler.
+  4 yetenek eklendi (Taş Kırma/Çakra Bombası/Karıştır/Geri Al). YETENEK sekmesi + tahta üstü çubuk.
+- Taş Kırma kullanıcı isteğiyle **pahalı + max 5 + erişmesi zor** (base1200, grow2.0). Geri Al için
+  hamle-snapshot/undo (kill olduysa iptal). Cloudflare quick tunnel ile telefon testi açıldı.
+
+**2026-06-03 (devam 2) — SİMÜLASYONLA DENGE + DİNAMİK TAHTA (v20)**
+- Motor başsız simüle edildi (Node, ~250 akış/varyant + meta). Bulgu: yükseltmeler
+  işe yaramıyordu çünkü 4×4'te ölüm yapısal (tahta kilidi), hasar değil. Çözüm:
+  HP eğrisi düşürüldü + hasar/level güçlendirildi → canavarlar hızlı devrilip bir
+  tahta ömründe çok aşama geçiliyor → yükseltmeler artık net hissediliyor.
+- **Yenilikçi: Geniş Tahta yükseltmesi (4×4→5×5→6×6)** — "daha ileri"nin asıl
+  kaldıracı (sim: 4×4 ağır=17, 6×6 ağır=29). `N` dinamikleştirildi.
+- Final denge config C; meta r1→r20 = aşama 5→17. Sürüm v20.
+
+**2026-06-03 (devam) — ROGUELITE döngü + dengeleme + bug avı (v17→v19)**
+- **v17:** Canavar dengesi (HP↑) + canavar saldırısı (kilitli taş 🪨) + jutsu patlama
+  (3×3 süpürme). `isGameOver`'da alt-satır `grid[y+1]` çökme bug'ı bulundu & düzeltildi.
+- **v18:** Yüklenen/başlangıç karoları ekrana çizilmiyordu (DOM eleman yalnız `actuate`'te
+  oluşuyordu) → `relayout` artık eksik eleman oluşturup çiziyor. Kullanıcının kayıtlı
+  tahtası boş görünüyordu, düzeldi.
+- **v19 (kullanıcı yönü):** "Öl-güçlen-daha ileri git" ROGUELITE'a çevrildi. Tahta
+  tıkanınca **akış biter, aşama 1'e döner** (`endRun`/`newRun`/`showRunOver`). Ryō
+  kalıcı meta para → GÜÇ'ten kalıcı yükseltme (Çakra Gücü / Mühür Ustalığı / **Taş
+  Direnci** yeni). HP eğrisi yumuşatıldı (90·1.16^n). En iyi skor/aşama + son 5 akış
+  İSTAT'ta. Kayıt v2: kalıcı meta + akış ayrı; eski kayıt migration ile akışı sıfırlar.
+  Düzen: arena büyüsün (canavar ezilmesin), tahta küçüldü (38vh).
+- **Sıradaki:** kullanıcı denge testi → eğri ayarı; gerçek "best skor tablosu" cilası.
+- **Hâlâ commit/push EDİLMEDİ.**
+
+**2026-06-03 — BÜYÜK PİVOT: Tap oyunu → Shinobi 2048**
+- Kullanıcı tap/idle + seal-combo mantığını tamamen bıraktı; "akıcı, sürekli
+  oynanan, popüler, chill bir mini oyun" istedi → **2048 kaydır-birleştir +
+  canavara hasar** melezi tasarlandı ve ilk prototip kuruldu.
+- `index.html` tahta düzenine geçirildi (dock: OYUN/GÜÇ/İSTAT), `game.js` baştan
+  yazıldı (2048 motoru + birleştirme→hasar + kayıt), `style.css`'e tahta/karo
+  bölümü eklendi. Eski sahne üretici + sprite yükleyici + parçacık efektleri korundu.
+- Birleştirme motorundaki "boşluklu karolar birleşmiyor" hatası bulundu & düzeltildi
+  (orijinal hücre temizlenmeliydi), node birim-testiyle doğrulandı. `?v=16`.
+- **Henüz commit/push EDİLMEDİ** — kullanıcı tarayıcıda his/denge testini bekliyor.
 
 **2026-06-02 — Repo kurulumu**
 - Git deposu başlatıldı, `origin = https://github.com/asilonfire/mobilsss`.

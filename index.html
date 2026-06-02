@@ -6,11 +6,11 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <title>Shinobi Tap — Mühür Combo</title>
+  <title>Shinobi 2048 — Mühür Akışı</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&family=Bangers&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=15" />
+  <link rel="stylesheet" href="style.css?v=23" />
 </head>
 <body>
   <div id="app">
@@ -19,6 +19,8 @@
       <div class="hud-row1">
         <div class="icon-stack">
           <button class="icon-btn" id="gear" title="Sıfırla">⚙️</button>
+          <!-- TEST BUTONU — SONRA KALDIR -->
+          <button class="icon-btn" id="dbg-gold" title="TEST: +1000 ryō">💰</button>
         </div>
         <div class="enemy-info">
           <div id="enemy-name" class="enemy-name">Haydut</div>
@@ -27,15 +29,16 @@
             <span id="hptext" class="hp-text">50 HP</span>
           </div>
         </div>
-        <div id="kill-counter" class="kill-counter">
-          <span class="skull">💀</span><span id="kills">1</span><small>/10</small>
+        <div id="stage-counter" class="kill-counter">
+          <span class="skull">🏯</span><span id="stage-num">1</span>
         </div>
       </div>
       <div class="hud-row2">
         <div class="gold-pill"><span class="coin">🪙</span><span id="gold">0</span></div>
         <div class="lvl-pill">
-          <span>Lv <b id="level">1</b></span>
+          <span>Skor</span>
           <div class="xp-track"><div id="xpbar" class="xp-fill"></div></div>
+          <b id="score">0</b>
         </div>
         <div id="combo-pill" class="combo-pill">COMBO x<span id="combo-mult">1.0</span></div>
       </div>
@@ -51,26 +54,18 @@
       <div class="scene" id="sc-deco"></div>
       <div id="combo-flash"></div>
       <div id="stage-banner"></div>
-      <div id="boss-timer" class="hidden">
-        <div class="bt-bar"><div id="boss-bar"></div></div>
-        <span id="boss-text">⏱ 30</span>
-      </div>
       <div id="portal" class="hidden"></div>
       <div id="countdown" class="hidden"></div>
 
       <div id="enemy-wrap">
-        <div id="enemy" role="button" aria-label="Düşmana saldır"><span id="enemy-icon">👹</span></div>
+        <div id="enemy" role="img" aria-label="Düşman"><span id="enemy-icon">👹</span></div>
         <div id="enemy-shadow"></div>
       </div>
 
       <div id="hero"><div id="hero-aura"></div><span id="hero-icon">🥷</span></div>
       <div id="hero-shadow"></div>
-      <div id="allies-left" class="ally-row"></div>
-      <div id="allies-right" class="ally-row"></div>
 
       <div id="platform"></div>
-      <div id="ledge-left" class="ledge"></div>
-      <div id="ledge-right" class="ledge"></div>
       <div id="float-layer"></div>
       <div id="particle-layer"></div>
     </section>
@@ -79,38 +74,35 @@
     <section id="dock">
       <div id="tab-content">
 
-        <!-- SAVAŞ: skill bar + aktif jutsu + mühür takımı -->
-        <div class="panel" data-panel="combat">
-          <div id="skill-bar"></div>
-          <div class="active-line">
-            <span id="jutsu-icon" class="jutsu-icon">🔥</span>
-            <div class="jutsu-titles">
-              <span id="jutsu-jp" class="jutsu-jp">火遁・豪火球の術</span>
-              <span id="jutsu-name" class="jutsu-name">Katon: Gōkakyū</span>
+        <!-- OYUN: 2048 tahtası -->
+        <div class="panel" data-panel="board">
+          <div id="board-head">
+            <span id="board-tip">Kaydır → birleştir → canavarı yık · 🪨 taş · 🃏 joker · 🪙 altın · 💣 bomba</span>
+          </div>
+          <div id="ability-bar"></div>
+          <div id="board-wrap">
+            <div id="board">
+              <div id="cell-bg"></div>
+              <div id="tile-layer"></div>
+            </div>
+            <div id="board-over" class="hidden">
+              <div class="bo-title">Çakra Tükendi</div>
+              <div class="bo-sub">Tahta tıkandı — ama ryō, güç ve aşaman duruyor.</div>
+              <button id="bo-restart" class="big-btn">Tekrar Akışa Geç</button>
             </div>
           </div>
-          <div id="seal-pad">
-            <div id="pad-left" class="pad-group"></div>
-            <div id="pad-right" class="pad-group"></div>
-          </div>
         </div>
 
-        <!-- JUTSU listesi -->
-        <div class="panel hidden" data-panel="skills">
-          <div class="panel-head"><span id="skills-title">Jutsu Açma</span><span class="ph-gold">🪙 <span class="gold-mirror">0</span></span></div>
-          <div id="skill-list" class="card-list"></div>
-        </div>
-
-        <!-- DOST mağazası -->
-        <div class="panel hidden" data-panel="pets">
-          <div class="panel-head"><span>Dostlar <small style="opacity:.7;font-weight:600">(oto hasar)</small></span><span class="ph-gold">🪙 <span class="gold-mirror">0</span></span></div>
-          <div id="pet-list" class="card-list"></div>
-        </div>
-
-        <!-- GÜÇ geliştirmeleri -->
+        <!-- GÜÇ geliştirmeleri (kalıcı) -->
         <div class="panel hidden" data-panel="power">
-          <div class="panel-head"><span id="tapdmg-title">11 Tap Hasarı</span><span class="ph-gold">🪙 <span class="gold-mirror">0</span></span></div>
+          <div class="panel-head"><span>Güç <small style="opacity:.7;font-weight:600">(kalıcı)</small></span><span class="ph-gold">🪙 <span class="gold-mirror">0</span></span></div>
           <div id="power-list" class="card-list"></div>
+        </div>
+
+        <!-- YETENEK (her akış sınırlı kullanım) -->
+        <div class="panel hidden" data-panel="ability">
+          <div class="panel-head"><span>Yetenek <small style="opacity:.7;font-weight:600">(her akış sınırlı)</small></span><span class="ph-gold">🪙 <span class="gold-mirror">0</span></span></div>
+          <div id="ability-list" class="card-list"></div>
         </div>
 
         <!-- İSTATİSTİK -->
@@ -121,15 +113,14 @@
       </div>
 
       <nav id="tab-bar">
-        <button class="tab active" data-tab="combat" style="--tc:#ff5a4d">⚔️<small>SAVAŞ</small></button>
-        <button class="tab" data-tab="skills" style="--tc:#3aa0ff">🌀<small>JUTSU</small></button>
-        <button class="tab" data-tab="pets"   style="--tc:#7dff8a">🤝<small>DOST</small></button>
+        <button class="tab active" data-tab="board" style="--tc:#ff5a4d">🎴<small>OYUN</small></button>
+        <button class="tab" data-tab="ability" style="--tc:#7ae7ff">✨<small>YETENEK</small></button>
         <button class="tab" data-tab="power"  style="--tc:#ffd24a">💪<small>GÜÇ</small></button>
         <button class="tab" data-tab="stats"  style="--tc:#b89bff">⭐<small>İSTAT</small></button>
       </nav>
     </section>
   </div>
 
-  <script src="game.js?v=15"></script>
+  <script src="game.js?v=23"></script>
 </body>
 </html>

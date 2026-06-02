@@ -408,3 +408,113 @@ body{font-family:"VT323",monospace;font-size:19px;letter-spacing:.02em}
 #combo-ground.ready .cg-x{color:#fff;animation:cgReady .5s infinite}
 #combo-ground .cg-ready{font-size:11px;color:#fff;animation:cgReady .5s infinite}
 @keyframes cgReady{0%,100%{opacity:1}50%{opacity:.45}}
+
+/* ============================================================
+   SHINOBI 2048 — TAHTA / KARO / EFEKTLER
+   ============================================================ */
+/* combo hapını geri aç (artık 2048 combo göstergesi) */
+#combo-pill{display:flex !important;align-items:center;gap:3px;font-family:"Press Start 2P",monospace;font-size:8px}
+
+/* arena büyüsün ki canavar ezilmesin; tahta dock'ta sabit boyutta kalsın */
+#arena{flex:1 1 auto;min-height:168px}
+
+/* skor/aşama HUD küçük rötuş */
+.lvl-pill b{color:#9fe7ff;font-family:"Press Start 2P",monospace;font-size:9px}
+
+/* --- aktif yetenek çubuğu (tahtanın üstünde) --- */
+#ability-bar{display:flex;gap:8px;justify-content:center;padding:1px 6px 5px;flex-wrap:wrap}
+.ab-btn{position:relative;width:48px;height:42px;border-radius:6px;cursor:pointer;font-family:inherit;
+  display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(circle at 35% 26%, rgba(255,255,255,.22), transparent 60%), rgba(0,0,0,.42);
+  border:2px solid var(--ac,#888);box-shadow:0 0 12px -3px var(--ac);transition:transform .08s}
+.ab-btn:active{transform:scale(.9)}
+.ab-btn .ab-ic{font-size:21px;line-height:1;filter:drop-shadow(0 0 4px var(--ac))}
+.ab-btn .ab-ch{position:absolute;bottom:-6px;right:-6px;background:#15101e;color:var(--ac);
+  font-family:"Press Start 2P",monospace;font-size:8px;border-radius:99px;padding:2px 5px;border:2px solid var(--ac)}
+.ab-btn.empty{filter:grayscale(.85) brightness(.5);cursor:default;box-shadow:none}
+
+/* --- tahta başlığı --- */
+#board-head{text-align:center;padding:3px 6px 5px}
+#board-tip{font-family:"VT323",monospace;font-size:15px;color:#cdebc0;opacity:.85;line-height:1.05}
+
+/* --- tahta --- */
+#board-wrap{position:relative;display:flex;justify-content:center;padding:2px 6px 6px}
+#board{position:relative;width:min(90vw,38vh,410px);aspect-ratio:1/1;
+  background:#1c1626;border-radius:10px;border:3px solid #15101e;
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.05),0 4px 0 #120e1a;
+  touch-action:none;cursor:grab;overflow:hidden}
+#board:active{cursor:grabbing}
+#cell-bg{position:absolute;inset:0;display:grid;
+  grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(4,1fr);gap:8px;padding:8px}
+.cell{background:rgba(0,0,0,.3);border-radius:6px;border:1px solid rgba(255,255,255,.03)}
+#tile-layer{position:absolute;inset:0}
+
+/* --- karo --- */
+.tile{position:absolute;top:0;left:0;border-radius:6px;
+  background:radial-gradient(circle at 34% 26%, rgba(255,255,255,.4), transparent 62%), var(--tc,#888);
+  border:2px solid rgba(0,0,0,.32);box-shadow:inset 0 -5px 0 rgba(0,0,0,.22);
+  transition:transform .12s ease, opacity .12s ease;will-change:transform}
+.tile-inner{width:100%;height:100%;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:1px}
+.tile .tile-ic{width:60%;height:52%;display:flex;align-items:center;justify-content:center;color:#fff}
+.tile .tile-ic .hand{width:100%;height:100%;filter:drop-shadow(0 1px 1px rgba(0,0,0,.4))}
+.tile .tj{font-size:clamp(20px,7vw,30px);filter:drop-shadow(0 0 8px var(--tc))}
+.tile .tile-v{font-family:"Press Start 2P",monospace;font-size:8px;color:rgba(255,255,255,.95);
+  text-shadow:0 1px 2px #000;letter-spacing:-.02em}
+.tile[data-kind="jutsu"]{border-color:#fff;
+  box-shadow:inset 0 -5px 0 rgba(0,0,0,.22),0 0 16px var(--tc);animation:jutsuGlow 1.1s ease-in-out infinite}
+@keyframes jutsuGlow{0%,100%{box-shadow:inset 0 -5px 0 rgba(0,0,0,.22),0 0 12px var(--tc)}
+  50%{box-shadow:inset 0 -5px 0 rgba(0,0,0,.22),0 0 26px var(--tc),0 0 40px #fff}}
+.tile-new .tile-inner{animation:tileNew .16s ease}
+@keyframes tileNew{0%{transform:scale(.2);opacity:0}100%{transform:scale(1);opacity:1}}
+.tile-merge .tile-inner{animation:tileMerge .2s ease}
+@keyframes tileMerge{0%{transform:scale(1)}45%{transform:scale(1.24)}100%{transform:scale(1)}}
+.tile-gone{opacity:0;transform-origin:center}
+
+/* kilitli taş (canavar saldırısı) */
+.tile[data-kind="stone"]{
+  background:repeating-linear-gradient(45deg,#5a5560 0 6px,#494550 6px 12px);
+  border-color:#2c2832;box-shadow:inset 0 -5px 0 rgba(0,0,0,.35),inset 0 2px 0 rgba(255,255,255,.06)}
+.tile[data-kind="stone"] .tj{filter:none;font-size:clamp(18px,6vw,26px)}
+
+/* özel karolar: joker / altın / bomba */
+.tile-inner{position:relative}
+.tile-badge{position:absolute;top:2px;right:3px;font-size:13px;line-height:1;
+  filter:drop-shadow(0 1px 1px #000);pointer-events:none;z-index:2}
+.tile[data-kind="wild"]{border-color:#fff;
+  background:linear-gradient(135deg,#ff5ad0,#7ae7ff,#7dff8a,#ffd24a,#ff5ad0);
+  background-size:300% 300%;animation:wildShift 2.4s linear infinite}
+@keyframes wildShift{0%{background-position:0% 50%}100%{background-position:300% 50%}}
+.tile[data-kind="wild"] .tile-v{font-size:7px;color:#fff}
+.tile[data-kind="wild"] .tj{font-size:clamp(20px,7vw,30px);filter:drop-shadow(0 0 4px #fff)}
+.tile[data-special="gold"]{border-color:#ffd24a;
+  box-shadow:inset 0 -5px 0 rgba(0,0,0,.22),0 0 14px #ffd24a}
+.tile[data-special="bomb"]{border-color:#ff7a3a;animation:bombPulse .8s ease-in-out infinite}
+@keyframes bombPulse{0%,100%{box-shadow:inset 0 -5px 0 rgba(0,0,0,.22),0 0 8px #ff5a1e}
+  50%{box-shadow:inset 0 -5px 0 rgba(0,0,0,.22),0 0 22px #ff5a1e,0 0 32px #ff3b30}}
+
+/* skor tablosu (İSTAT) — akış geçmişi tam satır */
+.stat.hist-head{grid-column:1/-1;background:transparent;padding:8px 4px 2px}
+.stat.hist-head .k{color:#ffd24a;font-family:"Press Start 2P",monospace;font-size:9px}
+.stat.hist{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;padding:7px 12px}
+.stat.hist .v{font-size:11px}
+.bo-sub b{color:#ffd24a}
+
+/* tahta dolmak üzere — kırmızı uyarı kenarı */
+#board.danger{border-color:#ff3b46}
+#board.danger{animation:boardDanger .6s ease-in-out infinite}
+@keyframes boardDanger{
+  0%,100%{box-shadow:inset 0 2px 0 rgba(255,255,255,.05),0 0 0 rgba(255,59,70,0)}
+  50%{box-shadow:inset 0 0 0 2px rgba(255,59,70,.55),0 0 18px rgba(255,59,70,.5)}}
+
+/* --- çakra tükendi ekranı --- */
+#board-over{position:absolute;inset:0;z-index:6;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:12px;text-align:center;padding:20px;
+  background:rgba(10,8,16,.88);border-radius:8px}
+#board-over.hidden{display:none}
+.bo-title{font-family:"Press Start 2P",monospace;font-size:15px;color:#ff8a6a;text-shadow:2px 2px 0 #4a1010}
+.bo-sub{font-family:"VT323",monospace;font-size:17px;color:#cdebc0;max-width:85%;line-height:1.1}
+.big-btn{font-family:"Press Start 2P",monospace;font-size:10px;color:#3a2400;cursor:pointer;
+  background:linear-gradient(180deg,#ffd24a,#ff8a1e);border:none;border-radius:6px;
+  padding:13px 16px;box-shadow:0 4px 0 #b3500c}
+.big-btn:active{transform:translateY(2px);box-shadow:0 2px 0 #b3500c}
