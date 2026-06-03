@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&family=Bangers&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=27" />
+  <link rel="stylesheet" href="style.css?v=28" />
 </head>
 <body>
   <div id="app">
@@ -92,6 +92,13 @@
               <div class="bo-sub">Tahta tıkandı — ama ryō, güç ve aşaman duruyor.</div>
               <button id="bo-restart" class="big-btn">Tekrar Akışa Geç</button>
             </div>
+            <!-- SON ŞANS: sıkışınca kurtarıcı yetenekler -->
+            <div id="rescue" class="hidden">
+              <div class="rsc-title">⚠ TAHTA SIKIŞTI</div>
+              <div class="rsc-sub">Bir yetenek kullan, kurtul!</div>
+              <div id="rescue-abilities"></div>
+              <button id="rescue-give" class="big-btn ghost">Pes Et</button>
+            </div>
           </div>
         </div>
 
@@ -123,6 +130,6 @@
     </section>
   </div>
 
-  <script src="game.js?v=27"></script>
+  <script src="game.js?v=28"></script>
 </body>
 </html>

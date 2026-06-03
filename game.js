@@ -213,7 +213,7 @@ const SIZE_MAX = 6;
 const SAVE_KEY = "shinobi2048";
 const G = {
   /* AKIŞ (run) — ölünce sıfırlanır */
-  stage:1, score:0, moves:0, enemyMoves:0, comboMult:1, enemy:null, over:false,
+  stage:1, score:0, moves:0, enemyMoves:0, comboMult:1, enemy:null, over:false, paused:false,
   /* KALICI (meta) — akışlar arası taşınır */
   gold:0, mergeLvl:0, masteryLvl:0, stoneLvl:0, boardSize:4,
   abilities:{}, charges:{}, undoSnap:null,
@@ -262,6 +262,7 @@ const el = {
   portal:$("portal"), countdown:$("countdown"),
   board:$("board"), tileLayer:$("tile-layer"), cellBg:$("cell-bg"),
   tabContent:$("tab-content"), boardOver:$("board-over"), boTip:$("board-tip"),
+  rescue:$("rescue"), rescueAbilities:$("rescue-abilities"),
   powerList:$("power-list"), statsList:$("stats-list"),
   abilityBar:$("ability-bar"), abilityList:$("ability-list"),
 };
@@ -509,7 +510,7 @@ function addStone(){
   return t;
 }
 function move(dir){               // 0 yukarı, 1 sağ, 2 aşağı, 3 sol
-  if(G.over) return;
+  if(G.over || G.paused) return;
   const snap = snapshot();         // Geri Al için: hamleden önceki durum
   const vx = [0,1,0,-1][dir], vy = [-1,0,1,0][dir];
   const order = [...Array(N).keys()];
@@ -569,7 +570,7 @@ function move(dir){               // 0 yukarı, 1 sağ, 2 aşağı, 3 sol
   updateDeadline();
   renderHud();
   renderAbilityBar();
-  if(isGameOver()) endRun();
+  if(isGameOver()) concludeJam();
   save();
 }
 function isGameOver(){
@@ -590,8 +591,51 @@ function enemyStrike(){
 /* ===================== AKIŞ (RUN) DÖNGÜSÜ ===================== */
 /* tahta tıkandı → AKIŞ BİTER: en iyi skor güncellenir, aşama 1'e döner.
    Kazanılan ryō kalıcı → GÜÇ'ten yükselt → sonraki akışta daha ileri. */
+/* ---- SON ŞANS: tahta sıkışınca kurtarıcı yetenekleri öne çıkar ---- */
+function rescueOptions(){
+  const hasStones = [...tiles.values()].some(t => t.stone);
+  const movable = [...tiles.values()].filter(t => !t.stone).length;
+  return ABILITIES.filter(a => {
+    if((G.charges[a.id] || 0) <= 0) return false;
+    if(a.id === "stone")   return hasStones;     // taş varsa kırınca yer açılır
+    if(a.id === "shuffle") return movable >= 2;   // karıştırınca yeni eşleşmeler doğabilir
+    if(a.id === "undo")    return !!G.undoSnap;    // son hamleyi geri al → açık tahta
+    return false;                                  // bomba tahtayı açmaz, kurtarıcı değil
+  });
+}
+function concludeJam(){
+  const opts = rescueOptions();
+  if(opts.length) openRescue(opts);
+  else endRun();
+}
+function openRescue(list){
+  G.paused = true;
+  el.rescueAbilities.innerHTML = "";
+  list.forEach((a, i) => {
+    const b = document.createElement("button");
+    b.className = "rsc-ab"; b.style.setProperty("--ac", a.color);
+    b.style.animationDelay = (i * 0.08) + "s";
+    b.innerHTML = `<span class="rsc-ic">${a.icon}</span><span class="rsc-nm">${a.name}</span><span class="rsc-ch">×${G.charges[a.id]}</span>`;
+    b.addEventListener("click", () => useAbility(a.id));
+    el.rescueAbilities.appendChild(b);
+  });
+  el.rescue.classList.remove("hidden");
+  el.rescue.classList.remove("pop"); void el.rescue.offsetWidth; el.rescue.classList.add("pop");
+  comboFlash("#ffd24a"); burst("#ffd24a");
+  if(typeof tone === "function") tone(620, 0.45, "triangle", 0.2, 990);
+  buzz([30, 40, 30]);
+  banner("⚠ Sıkıştın — yetenekle kurtul!");
+}
+function closeRescue(){
+  G.paused = false;
+  el.rescue.classList.add("hidden");
+  comboFlash("#7dff8a");
+  if(typeof tone === "function") tone(660, 0.18, "square", 0.2, 990);
+  banner("✊ Kurtuldun! Devam!");
+}
 function endRun(){
-  G.over = true;
+  G.over = true; G.paused = false;
+  el.rescue.classList.add("hidden");
   if(G.score > G.best) G.best = G.score;
   if(G.stage > G.bestStage) G.bestStage = G.stage;
   G.runs = (G.runs || 0) + 1;
@@ -615,10 +659,10 @@ function showRunOver(){
   o.classList.remove("hidden");
 }
 function newRun(){
-  G.over = false;
+  G.over = false; G.paused = false;
   G.stage = 1; G.score = 0; G.moves = 0; G.comboMult = 1;
   el.comboMult.textContent = "1.0"; el.comboPill.classList.remove("active");
-  el.boardOver.classList.add("hidden");
+  el.boardOver.classList.add("hidden"); el.rescue.classList.add("hidden");
   applyBoardSize(G.boardSize);                 // satın alınan tahta boyutu bu akıştan geçerli
   emptyBoard(); addRandomTile(); addRandomTile();
   spawnEnemy(false);
@@ -668,6 +712,11 @@ function useAbility(id){
   renderAbilityBar();
   renderHud();
   save();
+  // SON ŞANS: kurtarma sırasında kullanıldıysa tahtayı tekrar değerlendir
+  if(G.paused){
+    if(!isGameOver()){ closeRescue(); updateDanger(); updateDeadline(); }
+    else { const r = rescueOptions(); if(r.length) openRescue(r); else endRun(); }
+  }
 }
 function abStone(){
   let removed = 0;
@@ -1240,6 +1289,7 @@ function bindInput(){
   const dbg = $("dbg-gold");
   if(dbg) dbg.addEventListener("click", () => { G.gold += 100000; renderHud(); renderAbilityBar(); save(); banner("+100K ryō (test)"); });
   $("bo-restart").addEventListener("click", newRun);
+  $("rescue-give").addEventListener("click", () => { G.paused = false; el.rescue.classList.add("hidden"); endRun(); });
   window.addEventListener("resize", relayout);
 
   // ses: tercih + ilk dokunuşta başlat + mute düğmesi
@@ -1263,6 +1313,7 @@ function init(){
   renderHud();
   renderAbilityBar();
   bindInput();
+  if(isGameOver()) concludeJam();   // yüklenen tahta zaten sıkışıksa kurtarma/bitiş
   banner(had ? "Tekrar hoş geldin, şinobi" : "Kaydır ve birleştir!");
 }
 init();

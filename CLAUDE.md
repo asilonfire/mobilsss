@@ -86,7 +86,12 @@ sonraki akışta daha ileri. **En iyi skor + en iyi aşama + son 5 akış** İST
 - Karo→hedef "kayıp karo" birleşmede hedefe doğru kayıyor ama kaynak karo görsel kaymıyor (sadece soluyor) — istenirse cilalanır.
 - Ses yok. Jutsu karoları emoji ikon kullanıyor (assets/jutsu/ klasörü yok, sorun değil).
 - Tarayıcıda gerçek el-testi yapılmadı (sandbox localhost'a curl atamadı; kullanıcı test edecek).
-- `index.html` cache sürümü şu an: **?v=27** (style.css & game.js).
+- `index.html` cache sürümü şu an: **?v=28** (style.css & game.js).
+- **SON ŞANS / KURTARMA (v28):** tahta sıkışınca (`isGameOver`) hemen bitmez —
+  `concludeJam()` kurtarıcı yetenek var mı bakar (`rescueOptions`: taş kırma/karıştır/geri al,
+  bomba HARİÇ). Varsa `openRescue` ekranın ortasına glow'lu uçan butonlarla getirir
+  (`G.paused=true`, swipe kilitli). Yetenek kullanılınca tahta tekrar oynanırsa `closeRescue`
+  → devam; değilse tekrar kurtarma ya da `endRun`. "Pes Et" butonu = endRun. `#rescue` katmanı.
 - **PREMIUM TEMA v2 (v27):** style.css'in en sonunda "TEMA v2 — PREMIUM FACELIFT" bloğu
   öncekileri ezer. Derin neon-karanlık gradient zemin + vignette/ışıma, cam (glassmorphism)
   HUD/dock/kartlar, parlak yuvarlak gradient karolar (`color-mix` ile tier'dan koyu üretir),

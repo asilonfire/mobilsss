@@ -642,3 +642,29 @@ body{
   border:1px solid rgba(255,255,255,.08)}
 .big-btn{border-radius:13px !important;background:linear-gradient(180deg,#ffd97a,#ff8a1e) !important;
   box-shadow:0 5px 0 #b3500c, 0 8px 18px -4px rgba(255,138,30,.5) !important;border:1px solid rgba(255,255,255,.2)}
+
+/* ---- SON ŞANS (kurtarma) katmanı ---- */
+#rescue{position:absolute;inset:0;z-index:8;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:14px;text-align:center;padding:18px;border-radius:20px;
+  background:radial-gradient(80% 60% at 50% 45%, rgba(40,30,12,.6), rgba(8,6,18,.86));backdrop-filter:blur(7px);
+  border:1px solid rgba(255,210,74,.25)}
+#rescue.hidden{display:none}
+#rescue.pop{animation:rscPop .3s ease}
+@keyframes rscPop{0%{opacity:0;transform:scale(.92)}100%{opacity:1;transform:scale(1)}}
+.rsc-title{font-family:"Press Start 2P",monospace;font-size:14px;color:#ffd24a;
+  text-shadow:0 0 14px rgba(255,210,74,.7),2px 2px 0 #5a3a00;animation:cgReady .7s infinite}
+.rsc-sub{font-family:"VT323",monospace;font-size:17px;color:#cdebc0;margin-top:-4px}
+#rescue-abilities{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin:4px 0}
+.rsc-ab{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;font-family:inherit;
+  width:86px;padding:12px 6px;border-radius:16px;color:#fff;
+  border:1px solid var(--ac);
+  background:radial-gradient(120% 120% at 50% 0%, color-mix(in srgb, var(--ac) 42%, transparent), rgba(255,255,255,.04));
+  box-shadow:0 0 24px -4px var(--ac), inset 0 1px 0 rgba(255,255,255,.22);
+  animation:rscIn .42s cubic-bezier(.2,1.5,.4,1) both}
+@keyframes rscIn{0%{opacity:0;transform:scale(.25) translateY(34px)}100%{opacity:1;transform:scale(1) translateY(0)}}
+.rsc-ab:active{transform:scale(.92)}
+.rsc-ic{font-size:30px;filter:drop-shadow(0 0 10px var(--ac))}
+.rsc-nm{font-family:"VT323",monospace;font-size:14px;line-height:1}
+.rsc-ch{font-family:"Press Start 2P",monospace;font-size:8px;color:var(--ac)}
+.big-btn.ghost{background:rgba(255,255,255,.08) !important;color:#cdebc0 !important;
+  box-shadow:0 4px 0 rgba(0,0,0,.45) !important;border:1px solid rgba(255,255,255,.15) !important}
