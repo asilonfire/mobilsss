@@ -535,3 +535,110 @@ body{font-family:"VT323",monospace;font-size:19px;letter-spacing:.02em}
   background:linear-gradient(180deg,#ffd24a,#ff8a1e);border:none;border-radius:6px;
   padding:13px 16px;box-shadow:0 4px 0 #b3500c}
 .big-btn:active{transform:translateY(2px);box-shadow:0 2px 0 #b3500c}
+
+/* =====================================================================
+   TEMA v2 — PREMIUM FACELIFT (en sonda → öncekileri ezer)
+   Derin neon-karanlık + cam paneller + parlak yuvarlak karolar.
+   ===================================================================== */
+:root{
+  --bg0:#0b0a14; --bg1:#141026; --bg2:#221a3a;
+  --glass:rgba(30,24,52,.62); --glassbd:rgba(255,255,255,.10);
+}
+body{
+  background:
+    radial-gradient(130% 90% at 50% -12%, #2a2150 0%, #16112e 42%, #0b0a14 100%) fixed;
+}
+
+/* ---- ARENA: derinlik + vignette + üst ışıma ---- */
+.scene{filter:saturate(.92) brightness(.9)}
+#arena::before{content:"";position:absolute;inset:0;z-index:6;pointer-events:none;
+  background:radial-gradient(70% 38% at 50% 6%, rgba(150,190,255,.14), transparent 70%)}
+#arena::after{content:"";position:absolute;inset:0;z-index:7;pointer-events:none;
+  background:radial-gradient(125% 80% at 50% 20%, transparent 52%, rgba(6,4,16,.55) 100%)}
+#enemy-wrap, #hero, #hero-shadow, #allies-left, #allies-right{z-index:8}
+#stage-banner{z-index:9}
+
+/* ---- HUD: cam ---- */
+#hud{background:linear-gradient(180deg, rgba(8,6,18,.6), transparent)}
+.icon-btn{border-radius:12px !important;border:1px solid var(--glassbd);
+  background:linear-gradient(180deg, rgba(255,255,255,.14), rgba(255,255,255,.04));
+  backdrop-filter:blur(6px);box-shadow:0 2px 6px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.18)}
+.icon-btn:active{transform:translateY(1px)}
+.enemy-name{color:#fff;text-shadow:0 0 10px rgba(150,190,255,.5),0 2px 4px #000}
+.hp-track{border-radius:99px !important;border:1px solid rgba(255,255,255,.12);
+  background:rgba(0,0,0,.5);box-shadow:inset 0 2px 4px rgba(0,0,0,.5)}
+.hp-fill{background:linear-gradient(180deg,#ff7a8a,#e01f4d);box-shadow:0 0 10px rgba(255,60,80,.5)}
+.gold-pill,.kill-counter,.lvl-pill{border-radius:99px !important;border:1px solid var(--glassbd);
+  background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.02));
+  backdrop-filter:blur(6px);box-shadow:0 2px 6px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.12)}
+.gold-pill{color:var(--gold);text-shadow:0 0 8px rgba(255,210,74,.5)}
+.xp-track{border-radius:99px !important;background:rgba(0,0,0,.45)}
+.xp-fill{background:linear-gradient(90deg,#37d0ff,#9fe7ff);box-shadow:0 0 8px rgba(55,208,255,.5)}
+
+/* ---- BOARD: premium çerçeve ---- */
+#board{border:1px solid rgba(255,255,255,.07) !important;border-radius:20px !important;
+  background:linear-gradient(160deg,#241c40,#140f28) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08), 0 14px 34px -10px rgba(0,0,0,.75), 0 3px 0 #0a0814 !important}
+#board.danger{border-color:rgba(255,90,90,.6) !important;
+  box-shadow:inset 0 0 0 2px rgba(255,80,90,.35), 0 0 26px rgba(255,60,70,.45) !important}
+.cell{background:rgba(255,255,255,.04) !important;border:none !important;border-radius:12px !important;
+  box-shadow:inset 0 1px 3px rgba(0,0,0,.4)}
+
+/* ---- TILE: parlak, yuvarlak, derin ---- */
+.tile{border:none !important;border-radius:13px !important;
+  box-shadow:inset 0 2px 1px rgba(255,255,255,.5), inset 0 -7px 12px rgba(0,0,0,.32),
+             0 5px 10px -3px rgba(0,0,0,.55)}
+.tile:not([data-kind="wild"]):not([data-kind="stone"]){
+  background:
+    radial-gradient(115% 80% at 30% 20%, rgba(255,255,255,.5), rgba(255,255,255,0) 55%),
+    linear-gradient(165deg, var(--tc), color-mix(in srgb, var(--tc) 55%, #1a1230)) !important}
+.tile .tile-ic{color:#fff;filter:drop-shadow(0 1px 1px rgba(0,0,0,.45))}
+.tile .tile-ic .hand{color:#fff}
+.tile .tile-v{background:rgba(8,6,18,.34);padding:1px 6px;border-radius:8px;margin-top:3px;
+  color:#fff;font-size:8px;letter-spacing:0;box-shadow:inset 0 0 0 1px rgba(255,255,255,.1)}
+.tile[data-special="gold"]{
+  box-shadow:inset 0 2px 1px rgba(255,255,255,.5), 0 0 18px rgba(255,210,74,.75),
+             0 5px 10px -3px rgba(0,0,0,.5) !important;outline:2px solid rgba(255,210,74,.85);outline-offset:-2px}
+.tile[data-kind="stone"]{background:linear-gradient(160deg,#4b4858,#2c2937) !important}
+.tile[data-kind="stone"] .tj{filter:drop-shadow(0 1px 1px #000)}
+
+/* ---- DOCK + sekmeler: cam ---- */
+#dock{background:linear-gradient(180deg, rgba(20,16,40,.97), rgba(10,9,20,.99)) !important;
+  border-top:1px solid rgba(255,255,255,.08) !important;box-shadow:0 -8px 24px rgba(0,0,0,.5)}
+#board-tip{color:#aeb6d8;opacity:.9}
+#tab-bar{background:transparent !important;gap:4px}
+.tab{border-radius:14px !important;border:1px solid transparent;opacity:.55}
+.tab.active{opacity:1;border-color:var(--glassbd);
+  background:radial-gradient(120% 120% at 50% 0%, color-mix(in srgb, var(--tc) 30%, transparent), transparent 70%),
+             rgba(255,255,255,.05) !important;
+  box-shadow:0 -2px 16px -4px var(--tc), inset 0 1px 0 rgba(255,255,255,.12);
+  border-bottom-color:var(--tc) !important}
+.tab.active small{color:#fff}
+
+/* ---- KARTLAR + butonlar ---- */
+.card{border-radius:16px !important;border:1px solid rgba(255,255,255,.08) !important;
+  background:linear-gradient(160deg, rgba(255,255,255,.07), rgba(255,255,255,.02)) !important;
+  backdrop-filter:blur(4px);box-shadow:0 4px 14px -6px rgba(0,0,0,.6)}
+.card-thumb{border-radius:13px !important;border:1px solid rgba(255,255,255,.12) !important;
+  box-shadow:inset 0 2px 1px rgba(255,255,255,.3), inset 0 -5px 8px rgba(0,0,0,.3),0 0 14px -4px var(--oc,#888)}
+.card-btn{border-radius:13px !important;border:1px solid rgba(255,255,255,.18) !important;
+  background:linear-gradient(180deg,#ffd97a,#ff8a1e) !important;color:#3a2200 !important;
+  box-shadow:0 4px 0 #b3500c, 0 6px 14px -4px rgba(255,138,30,.5) !important}
+.card-btn:active{transform:translateY(2px);box-shadow:0 2px 0 #b3500c !important}
+.card-btn.locked,.card-btn:disabled{background:linear-gradient(180deg,#4a4360,#352f4a) !important;
+  color:#9a92b0 !important;box-shadow:0 4px 0 #211c33 !important;border-color:rgba(255,255,255,.06) !important}
+.stat{border-radius:14px !important;border:1px solid rgba(255,255,255,.07);
+  background:linear-gradient(160deg, rgba(255,255,255,.06), rgba(255,255,255,.02)) !important}
+
+/* ---- yetenek çubuğu + deadline ---- */
+.ab-btn{border-radius:13px !important;
+  background:linear-gradient(180deg, rgba(255,255,255,.1), rgba(255,255,255,.02)),
+            radial-gradient(120% 120% at 50% 0%, color-mix(in srgb, var(--ac) 35%, transparent), transparent 70%);
+  border:1px solid var(--ac) !important;box-shadow:0 0 16px -5px var(--ac), inset 0 1px 0 rgba(255,255,255,.2)}
+.deadline{letter-spacing:.04em}
+
+/* ---- run-over / yeni akış ekranı: cam ---- */
+#board-over{border-radius:20px !important;background:rgba(10,8,20,.82) !important;backdrop-filter:blur(8px);
+  border:1px solid rgba(255,255,255,.08)}
+.big-btn{border-radius:13px !important;background:linear-gradient(180deg,#ffd97a,#ff8a1e) !important;
+  box-shadow:0 5px 0 #b3500c, 0 8px 18px -4px rgba(255,138,30,.5) !important;border:1px solid rgba(255,255,255,.2)}

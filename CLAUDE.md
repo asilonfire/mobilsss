@@ -86,7 +86,12 @@ sonraki akışta daha ileri. **En iyi skor + en iyi aşama + son 5 akış** İST
 - Karo→hedef "kayıp karo" birleşmede hedefe doğru kayıyor ama kaynak karo görsel kaymıyor (sadece soluyor) — istenirse cilalanır.
 - Ses yok. Jutsu karoları emoji ikon kullanıyor (assets/jutsu/ klasörü yok, sorun değil).
 - Tarayıcıda gerçek el-testi yapılmadı (sandbox localhost'a curl atamadı; kullanıcı test edecek).
-- `index.html` cache sürümü şu an: **?v=26** (style.css & game.js).
+- `index.html` cache sürümü şu an: **?v=27** (style.css & game.js).
+- **PREMIUM TEMA v2 (v27):** style.css'in en sonunda "TEMA v2 — PREMIUM FACELIFT" bloğu
+  öncekileri ezer. Derin neon-karanlık gradient zemin + vignette/ışıma, cam (glassmorphism)
+  HUD/dock/kartlar, parlak yuvarlak gradient karolar (`color-mix` ile tier'dan koyu üretir),
+  glow'lu aktif sekme. Karo renk rampası (`TIER_COLORS`) daha canlı yapıldı. Görsel değişiklik
+  için bu blok düzenlenir; karo görseli `.tile`/`.tile-v` kuralları.
 - **DOCK YÜKSEKLİĞİ (v26):** tüm sekme panelleri OYUN (tahta) paneliyle aynı yüksekliğe
   kilitli (`syncDockHeight` → `#tab-content` inline height = tahta paneli offsetHeight),
   kısa içerikler içte kaydırır. Geçişte düzen zıplamaz.

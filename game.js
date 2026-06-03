@@ -198,8 +198,8 @@ const BOSSES = [
 ];
 
 /* ---------- KARO KADEMELERİ (tier) ---------- */
-const TIER_COLORS = ["#8a8f98","#c0764a","#d89a4a","#cdd14a","#7dd14a","#4ad19a",
-                     "#4aa6d1","#5a6ed1","#8a5ad1","#c14ad1","#d14a8a","#d14a4a"];
+const TIER_COLORS = ["#7f8ca3","#36c5d6","#3a93e8","#5b6ef0","#9a5cf0","#c84fe0",
+                     "#e94fa3","#f06a5c","#f7973f","#f7c63f","#b7e24a","#5fd38a"];
 const TIERS = [];
 SEALS.forEach((s,i)=>TIERS.push({kind:"animal", key:s.en, name:s.en, color:TIER_COLORS[i%12]}));
 JUTSU.forEach(j=>TIERS.push({kind:"jutsu", name:j.name, jp:j.jp, icon:j.icon, img:j.img, color:j.color}));
