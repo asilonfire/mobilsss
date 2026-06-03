@@ -252,8 +252,10 @@ body{
 
 /* ===================== DOCK ===================== */
 #dock{background:var(--dock);border-top:3px solid #15101e;display:flex;flex-direction:column;z-index:15}
-#tab-content{position:relative}
+#tab-content{position:relative;overflow:hidden}
 .panel{padding:5px 8px 7px}
+/* OYUN dışındaki paneller tab-content'i (=tahta yüksekliği) tam doldurur, içte kaydırır */
+.panel:not([data-panel="board"]){height:100%;display:flex;flex-direction:column}
 .panel.hidden{display:none}
 .panel-head{display:flex;align-items:center;justify-content:space-between;
   font-size:15px;font-weight:800;color:#fff;padding:4px 4px 8px}
@@ -334,7 +336,7 @@ body{
 .seal-btn.hint-next{border-color:var(--orange);box-shadow:0 0 0 2px rgba(255,138,30,.35)}
 
 /* --- geliştirme kartları (Tap Titans stili) --- */
-.card-list{display:flex;flex-direction:column;gap:9px;max-height:240px;overflow-y:auto;padding-right:2px}
+.card-list{display:flex;flex-direction:column;gap:9px;flex:1 1 auto;min-height:0;overflow-y:auto;padding-right:2px}
 .card{display:flex;align-items:center;gap:10px;background:var(--card);border-radius:14px;
   padding:9px 10px;border:1px solid rgba(255,255,255,.06)}
 .card.locked{opacity:.6}
@@ -355,7 +357,8 @@ body{
 .card-btn.select{background:linear-gradient(180deg,#7dff8a,#2fbf52);color:#063b12;box-shadow:0 3px 0 #1a7d30}
 .card-btn.active-tag{background:#2e2540;color:#7dff8a;box-shadow:0 3px 0 #15101e}
 
-#stats-list{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:4px}
+#stats-list{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:4px;
+  flex:1 1 auto;min-height:0;overflow-y:auto;align-content:start}
 .stat{background:var(--card);border-radius:12px;padding:10px 12px}
 .stat .k{font-size:11px;color:#b9b0cf}
 .stat .v{font-size:18px;font-weight:800;color:#fff}

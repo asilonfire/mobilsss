@@ -261,7 +261,7 @@ const el = {
   flash:$("combo-flash"), banner:$("stage-banner"), gear:$("gear"),
   portal:$("portal"), countdown:$("countdown"),
   board:$("board"), tileLayer:$("tile-layer"), cellBg:$("cell-bg"),
-  boardOver:$("board-over"), boTip:$("board-tip"),
+  tabContent:$("tab-content"), boardOver:$("board-over"), boTip:$("board-tip"),
   powerList:$("power-list"), statsList:$("stats-list"),
   abilityBar:$("ability-bar"), abilityList:$("ability-list"),
 };
@@ -902,6 +902,14 @@ function relayout(){
     }
     setTilePos(t.el, t.x, t.y);
   });
+  syncDockHeight();
+}
+/* tüm sekmeler OYUN (tahta) paneliyle aynı yüksekliğe kilitlenir → geçişte zıplamaz */
+function syncDockHeight(){
+  const p = document.querySelector('.panel[data-panel="board"]');
+  if(p && !p.classList.contains("hidden") && p.offsetHeight > 0){
+    el.tabContent.style.height = p.offsetHeight + "px";
+  }
 }
 function buildCellBg(){
   el.cellBg.style.gridTemplateColumns = `repeat(${N},1fr)`;
@@ -1251,6 +1259,7 @@ function init(){
   if(tiles.size === 0){ addRandomTile(); addRandomTile(); }   // kayıt boşsa başlat
   spawnEnemy(false);
   requestAnimationFrame(() => { relayout(); });   // karoları İLK açılışta çiz (kaydırma beklemeden)
+  setTimeout(syncDockHeight, 180);                 // fontlar/yerleşim oturunca yükseklik kesinleşsin
   renderHud();
   renderAbilityBar();
   bindInput();

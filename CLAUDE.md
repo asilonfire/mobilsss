@@ -86,7 +86,10 @@ sonraki akışta daha ileri. **En iyi skor + en iyi aşama + son 5 akış** İST
 - Karo→hedef "kayıp karo" birleşmede hedefe doğru kayıyor ama kaynak karo görsel kaymıyor (sadece soluyor) — istenirse cilalanır.
 - Ses yok. Jutsu karoları emoji ikon kullanıyor (assets/jutsu/ klasörü yok, sorun değil).
 - Tarayıcıda gerçek el-testi yapılmadı (sandbox localhost'a curl atamadı; kullanıcı test edecek).
-- `index.html` cache sürümü şu an: **?v=25** (style.css & game.js).
+- `index.html` cache sürümü şu an: **?v=26** (style.css & game.js).
+- **DOCK YÜKSEKLİĞİ (v26):** tüm sekme panelleri OYUN (tahta) paneliyle aynı yüksekliğe
+  kilitli (`syncDockHeight` → `#tab-content` inline height = tahta paneli offsetHeight),
+  kısa içerikler içte kaydırır. Geçişte düzen zıplamaz.
 - **TAŞ MANTIĞI (v25):** sabit ritim değil — **süre bütçesi**. Canavarı `graceMoves()`
   hamlede yıkarsan taş YOK; geçersen `overEvery()` fazladan hamlede bir taş. Süre ilerledikçe
   kısalır (`14-(stage-1)*0.4`, min5; boss+4; Taş Direnci +2/lvl). HUD'da `#deadline` "⏳ N hamle".
