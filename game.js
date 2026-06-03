@@ -417,6 +417,7 @@ function startBossIntro(){
   el.enemy.classList.add("dead");
   el.enemyName.textContent = ""; el.hpbar.style.width = "0%"; el.hptext.textContent = "";
   playPortal();
+  sndBoss(); buzz([20,30,20]);
   banner("⚠ BOSS GELİYOR!");
   let n = 3; setCount(n);
   const iv = setInterval(() => {
@@ -463,6 +464,7 @@ function defeatEnemy(){
   const reward = Math.floor(G.enemy.max * 0.10 * (boss ? 2.2 : 1));
   G.gold += reward;
   floatDamage("+" + fmt(reward) + " 🪙", "crit", "#ffd24a");
+  sndDefeat(); goldRain(boss ? 14 : 7); buzz(boss ? [30,40,30] : 22);
   G.stage++;
   setTimeout(() => { spawnEnemy(true); renderHud(); save(); }, 520);
 }
@@ -588,6 +590,7 @@ function endRun(){
   G.history = G.history.slice(0, 5);
   app.classList.remove("shake"); void app.offsetWidth; app.classList.add("shake");
   comboFlash("#ff3030");
+  sndOver(); buzz([60,40,120]);
   showRunOver();
   save();
 }
@@ -649,6 +652,7 @@ function useAbility(id){
   else if(id === "bomb")    used = abBomb();
   else if(id === "undo")    used = abUndo();
   if(!used) return;
+  sndAbility(); buzz(25);
   G.charges[id]--;
   if(id !== "undo") G.undoSnap = null;   // hamle-dışı eylem undo'yu geçersiz kılar
   renderAbilityBar();
@@ -687,6 +691,7 @@ function abBomb(){
   if(!G.enemy || G.enemy.hp <= 0){ banner("Hedef yok"); return false; }
   const dmg = Math.round(G.enemy.max * 0.6);
   comboFlash("#ff7a18"); specialFlame("#ff7a18"); burst("#ff7a18"); burst("#fff"); miniSpark("#ff7a18", 16);
+  launchProjectile("#ff7a18"); sndJutsu();
   app.classList.remove("shake"); void app.offsetWidth; app.classList.add("shake");
   setHeroSprite("attack");
   banner("💥 Çakra Bombası!");
@@ -773,21 +778,24 @@ function resolveMerges(merges){
   });
   if(G.score > G.best) G.best = G.score;
   total = Math.round(total * dmgMult() * G.comboMult);
-  if(goldGain){ G.gold += goldGain; floatDamage("+" + fmt(goldGain) + " 🪙", "crit", "#ffd24a"); }
+  const topTier = Math.max(...merges.map(m => m.tier));
+  sndMerge(topTier); if(merges.length > 1) sndCombo(merges.length);
+  buzz(merges.length > 1 ? 18 : 9);
+  if(goldGain){ G.gold += goldGain; floatDamage("+" + fmt(goldGain) + " 🪙", "crit", "#ffd24a"); sndGold(); goldRain(6); }
   if(deto.length){
     let bonus = 0;
     deto.forEach(m => { bonus += detonate(m); });          // jutsu/bomba patlar → 3×3 süpürür
     const hasJutsu = deto.some(m => m.tier >= 12);
     const fx = hasJutsu ? tierData(Math.max(...deto.filter(m=>m.tier>=12).map(m=>m.tier))).color : "#ff5a1e";
     specialFlame(fx); burst(fx); burst("#fff"); miniSpark(fx, 16);
-    comboFlash(fx);
+    comboFlash(fx); launchProjectile(fx); sndJutsu(); buzz(35);
     app.classList.remove("shake"); void app.offsetWidth; app.classList.add("shake");
     banner(hasJutsu ? "💥 " + tierData(Math.max(...deto.filter(m=>m.tier>=12).map(m=>m.tier))).name + "!" : "💣 Patlama!");
     setHeroSprite("attack");
     dealDamage(total + Math.round(bonus * dmgMult()), "jutsu", fx);
     updateDanger();
   } else {
-    const topColor = tierData(Math.max(...merges.map(m=>m.tier))).color;
+    const topColor = tierData(topTier).color;
     miniSpark(topColor, 6);
     if(G.comboMult > 1) comboFlash(topColor);
     dealDamage(total, "merge", topColor);
@@ -936,6 +944,94 @@ function specialFlame(color){
 }
 function comboFlash(color){ el.flash.style.setProperty("--flash", color); el.flash.classList.remove("go"); void el.flash.offsetWidth; el.flash.classList.add("go"); }
 function banner(text){ el.banner.textContent = text; el.banner.classList.remove("show"); void el.banner.offsetWidth; el.banner.classList.add("show"); }
+/* hero'dan canavara giden mermi */
+function launchProjectile(color){
+  const W = el.particles.clientWidth, H = el.particles.clientHeight;
+  const p = document.createElement("div"); p.className = "proj"; p.style.setProperty("--pc", color);
+  p.style.left = (W*0.18) + "px"; p.style.top = (H*0.62) + "px";
+  el.particles.appendChild(p);
+  requestAnimationFrame(() => { p.style.transform = `translate(${W*0.40}px, ${-H*0.16}px) scale(1.3)`; p.style.opacity = "0.85"; });
+  setTimeout(() => { burst(color); p.remove(); }, 260);
+}
+/* altın yağmuru */
+function goldRain(n){
+  for(let i=0;i<(n||8);i++){
+    const c = document.createElement("div"); c.className = "coinfall"; c.textContent = "🪙";
+    c.style.left = (38 + Math.random()*44) + "%"; c.style.animationDelay = (Math.random()*0.35) + "s";
+    el.floatLayer.appendChild(c); setTimeout(() => c.remove(), 1200);
+  }
+}
+
+/* ===================== SES & TİTREŞİM (WebAudio sentezi, asset yok) ===================== */
+let AC = null, gMaster = null, gSfx = null, gMusic = null, musicTimer = null;
+const SND = { on: true };
+function loadAudioPref(){ try { SND.on = localStorage.getItem("snd") !== "0"; } catch(e){} }
+function ensureAudio(){
+  if(AC){ if(AC.state === "suspended") AC.resume(); return; }
+  try {
+    AC = new (window.AudioContext || window.webkitAudioContext)();
+    gMaster = AC.createGain(); gMaster.gain.value = SND.on ? 1 : 0; gMaster.connect(AC.destination);
+    gSfx = AC.createGain(); gSfx.gain.value = 0.6; gSfx.connect(gMaster);
+    gMusic = AC.createGain(); gMusic.gain.value = 0; gMusic.connect(gMaster);
+    startMusic();
+  } catch(e){ AC = null; }
+}
+function tone(freq, dur, type, gain, slideTo){
+  if(!AC || !SND.on) return;
+  const t = AC.currentTime, o = AC.createOscillator(), g = AC.createGain();
+  o.type = type || "triangle"; o.frequency.setValueAtTime(freq, t);
+  if(slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, t + dur);
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(gain || 0.3, t + 0.01);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g); g.connect(gSfx); o.start(t); o.stop(t + dur + 0.03);
+}
+function noise(dur, gain, filterFreq){
+  if(!AC || !SND.on) return;
+  const t = AC.currentTime, n = Math.floor(AC.sampleRate * dur);
+  const buf = AC.createBuffer(1, n, AC.sampleRate), d = buf.getChannelData(0);
+  for(let i=0;i<n;i++) d[i] = Math.random()*2 - 1;
+  const src = AC.createBufferSource(); src.buffer = buf;
+  const f = AC.createBiquadFilter(); f.type = "lowpass"; f.frequency.value = filterFreq || 1200;
+  const g = AC.createGain(); g.gain.setValueAtTime(gain || 0.3, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  src.connect(f); f.connect(g); g.connect(gSfx); src.start(t); src.stop(t + dur);
+}
+const PENTA = [0,3,5,7,10,12,15,17];
+function sndMerge(tier){ const s = PENTA[Math.min(tier, PENTA.length-1)] + (tier>=PENTA.length?12:0); tone(220*Math.pow(2, s/12), 0.12, "triangle", 0.22); }
+function sndCombo(n){ tone(523*Math.pow(2, Math.min(n,5)/12), 0.1, "square", 0.15); }
+function sndJutsu(){ noise(0.3, 0.32, 1800); tone(330, 0.35, "sawtooth", 0.22, 80); }
+function sndGold(){ tone(880, 0.07, "square", 0.18); setTimeout(() => tone(1318, 0.1, "square", 0.18), 70); }
+function sndDefeat(){ tone(180, 0.22, "sawtooth", 0.2, 60); noise(0.18, 0.18, 700); }
+function sndBoss(){ tone(110, 0.6, "sawtooth", 0.22, 440); }
+function sndAbility(){ noise(0.25, 0.22, 2600); }
+function sndOver(){ tone(220, 0.5, "triangle", 0.22, 80); }
+/* lo-fi ambient: yumuşak pentatonik arpej + bas drone */
+function startMusic(){
+  if(!AC) return;
+  clearInterval(musicTimer);
+  const o = AC.createOscillator(), g = AC.createGain();
+  o.type = "sine"; o.frequency.value = 110; g.gain.value = 0.05; o.connect(g); g.connect(gMusic); o.start();
+  gMusic.gain.linearRampToValueAtTime(SND.on ? 0.5 : 0, AC.currentTime + 2);
+  const scale = [220, 261.63, 293.66, 329.63, 392, 440, 329.63, 293.66];
+  let i = 0;
+  musicTimer = setInterval(() => {
+    if(!AC) return;
+    const f = scale[i % scale.length]; i++;
+    const tt = AC.currentTime, oo = AC.createOscillator(), gg = AC.createGain();
+    oo.type = "triangle"; oo.frequency.value = f;
+    gg.gain.setValueAtTime(0.0001, tt);
+    gg.gain.exponentialRampToValueAtTime(0.1, tt + 0.12);
+    gg.gain.exponentialRampToValueAtTime(0.0001, tt + 1.4);
+    oo.connect(gg); gg.connect(gMusic); oo.start(tt); oo.stop(tt + 1.5);
+  }, 920);
+}
+function setSound(on){
+  SND.on = on;
+  try { localStorage.setItem("snd", on ? "1" : "0"); } catch(e){}
+  if(gMaster) gMaster.gain.value = on ? 1 : 0;
+  const b = $("snd-toggle"); if(b) b.textContent = on ? "🔊" : "🔇";
+}
+function buzz(ms){ if(SND.on && navigator.vibrate){ try { navigator.vibrate(ms); } catch(e){} } }
 
 /* ===================== HUD + MAĞAZA ===================== */
 function renderHud(){
@@ -1119,6 +1215,14 @@ function bindInput(){
   if(dbg) dbg.addEventListener("click", () => { G.gold += 1000; renderHud(); renderAbilityBar(); save(); banner("+1000 ryō (test)"); });
   $("bo-restart").addEventListener("click", newRun);
   window.addEventListener("resize", relayout);
+
+  // ses: tercih + ilk dokunuşta başlat + mute düğmesi
+  loadAudioPref();
+  const sndBtn = $("snd-toggle");
+  if(sndBtn){ sndBtn.textContent = SND.on ? "🔊" : "🔇"; sndBtn.addEventListener("click", () => { ensureAudio(); setSound(!SND.on); }); }
+  const firstGesture = () => { ensureAudio(); window.removeEventListener("pointerdown", firstGesture); window.removeEventListener("keydown", firstGesture); };
+  window.addEventListener("pointerdown", firstGesture);
+  window.addEventListener("keydown", firstGesture);
 }
 
 /* ===================== BAŞLAT ===================== */

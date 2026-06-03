@@ -86,7 +86,13 @@ sonraki akışta daha ileri. **En iyi skor + en iyi aşama + son 5 akış** İST
 - Karo→hedef "kayıp karo" birleşmede hedefe doğru kayıyor ama kaynak karo görsel kaymıyor (sadece soluyor) — istenirse cilalanır.
 - Ses yok. Jutsu karoları emoji ikon kullanıyor (assets/jutsu/ klasörü yok, sorun değil).
 - Tarayıcıda gerçek el-testi yapılmadı (sandbox localhost'a curl atamadı; kullanıcı test edecek).
-- `index.html` cache sürümü şu an: **?v=22** (style.css & game.js).
+- `index.html` cache sürümü şu an: **?v=24** (style.css & game.js).
+- **SES & JUICE (v24 — Faz 1):** WebAudio **sentezi** (asset yok) — `tone/noise` + efektler
+  (`sndMerge/sndCombo/sndJutsu/sndGold/sndDefeat/sndBoss/sndAbility/sndOver`) + lo-fi ambient
+  arpej (`startMusic`). İlk dokunuşta `ensureAudio`, HUD'da 🔊 mute (localStorage `snd`).
+  Titreşim `buzz()` (navigator.vibrate). Mermi `launchProjectile`, altın yağmuru `goldRain`.
+- **TEST butonu (💰 +1000 ryō) hâlâ duruyor — launch öncesi KALDIR** (`dbg-gold`, işaretli).
+- **Repo politikası:** kullanıcı isteğiyle her anlamlı değişiklikten sonra commit + push.
 - **ÖZEL KAROLAR (v22):** doğal spawn'da düşük şansla — 🃏 joker (her şeyle birleşir,
   `wild`), 🪙 altın (birleşince ryō, `gold`), 💣 bomba (birleşince 3×3 patlar, `bomb`/`detonate`).
   Bayraklar merge'de sonuca taşınır (`_gold`/`_bomb`), kayıt/undo'da bitmask 4. eleman olarak
@@ -116,6 +122,12 @@ sonraki akışta daha ileri. **En iyi skor + en iyi aşama + son 5 akış** İST
 ---
 
 ## 🧠 SON OTURUM ÖZETİ
+
+**2026-06-03 (devam 5) — FAZ 1: HİS & JUICE (v24)**
+- Yol haritası araştırması yapıldı (roguelite retention + merge juice). Kullanıcı Faz 1'i seçti.
+- WebAudio sentezi ile ses efektleri + lo-fi ambient + 🔊 mute, titreşim, hero→canavar mermi,
+  altın yağmuru eklendi. Asset gerekmedi. ROADMAP.md taslağı kullanıcı isteğiyle kaldırıldı
+  (önce sohbet, sonra onayla devam). Sıradaki seçenekler: Faz 2 (perk draft/boss mekanikleri).
 
 **2026-06-03 (devam 4) — ÖZEL KAROLAR (v22)**
 - Kullanıcı isteğiyle 3 özel karo eklendi: 🃏 joker / 🪙 altın / 💣 bomba. Merge motoru
