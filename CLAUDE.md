@@ -86,7 +86,12 @@ sonraki akışta daha ileri. **En iyi skor + en iyi aşama + son 5 akış** İST
 - Karo→hedef "kayıp karo" birleşmede hedefe doğru kayıyor ama kaynak karo görsel kaymıyor (sadece soluyor) — istenirse cilalanır.
 - Ses yok. Jutsu karoları emoji ikon kullanıyor (assets/jutsu/ klasörü yok, sorun değil).
 - Tarayıcıda gerçek el-testi yapılmadı (sandbox localhost'a curl atamadı; kullanıcı test edecek).
-- `index.html` cache sürümü şu an: **?v=24** (style.css & game.js).
+- `index.html` cache sürümü şu an: **?v=25** (style.css & game.js).
+- **TAŞ MANTIĞI (v25):** sabit ritim değil — **süre bütçesi**. Canavarı `graceMoves()`
+  hamlede yıkarsan taş YOK; geçersen `overEvery()` fazladan hamlede bir taş. Süre ilerledikçe
+  kısalır (`14-(stage-1)*0.4`, min5; boss+4; Taş Direnci +2/lvl). HUD'da `#deadline` "⏳ N hamle".
+  `G.enemyMoves` her canavarda sıfırlanır. (Eski `atkEvery` kaldırıldı.)
+- TEST 💰 butonu artık **+100K** ryō.
 - **SES & JUICE (v24 — Faz 1):** WebAudio **sentezi** (asset yok) — `tone/noise` + efektler
   (`sndMerge/sndCombo/sndJutsu/sndGold/sndDefeat/sndBoss/sndAbility/sndOver`) + lo-fi ambient
   arpej (`startMusic`). İlk dokunuşta `ensureAudio`, HUD'da 🔊 mute (localStorage `snd`).

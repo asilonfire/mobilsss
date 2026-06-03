@@ -213,7 +213,7 @@ const SIZE_MAX = 6;
 const SAVE_KEY = "shinobi2048";
 const G = {
   /* AKIŞ (run) — ölünce sıfırlanır */
-  stage:1, score:0, moves:0, comboMult:1, enemy:null, over:false,
+  stage:1, score:0, moves:0, enemyMoves:0, comboMult:1, enemy:null, over:false,
   /* KALICI (meta) — akışlar arası taşınır */
   gold:0, mergeLvl:0, masteryLvl:0, stoneLvl:0, boardSize:4,
   abilities:{}, charges:{}, undoSnap:null,
@@ -238,7 +238,11 @@ const dmgMult    = () => 1 + 0.40 * G.mergeLvl;
 const jutsuMult  = () => 1 + 0.25 * G.masteryLvl;
 const isBoss     = () => G.stage % 5 === 0;
 const enemyMaxHp = () => Math.floor(60 * Math.pow(1.08, G.stage - 1)) * (isBoss() ? 4 : 1);
-const atkEvery   = () => (isBoss() ? 6 : 10) + G.stoneLvl;  // canavar kaç kaydırmada bir taş bırakır
+/* canavarı bu kadar hamlede yıkarsan taş YOK; geçersen taş başlar.
+   Süre ilerledikçe kısalır (zorlaşır); boss tankı için +; Taş Direnci süreyi uzatır. */
+const graceMoves = () => Math.max(5, Math.round(14 - (G.stage - 1) * 0.4)) + (isBoss() ? 4 : 0) + G.stoneLvl * 2;
+/* süre aşıldıktan sonra kaç fazladan hamlede bir taş düşer (ileri aşamada sıklaşır) */
+const overEvery  = () => Math.max(1, 3 - Math.floor(G.stage / 8));
 const mergeCost   = () => Math.floor(40 * Math.pow(1.5, G.mergeLvl));
 const masteryCost = () => Math.floor(120 * Math.pow(1.6, G.masteryLvl));
 const stoneCost   = () => Math.floor(200 * Math.pow(1.8, G.stoneLvl));
@@ -249,7 +253,7 @@ const $ = (id) => document.getElementById(id);
 const app = $("app");
 const el = {
   enemy:$("enemy"), enemyIcon:$("enemy-icon"), enemyName:$("enemy-name"),
-  hpbar:$("hpbar"), hptext:$("hptext"),
+  hpbar:$("hpbar"), hptext:$("hptext"), deadline:$("deadline"),
   stageNum:$("stage-num"), gold:$("gold"), score:$("score"), xpbar:$("xpbar"),
   comboMult:$("combo-mult"), comboPill:$("combo-pill"),
   arena:$("arena"), hero:$("hero"), heroIcon:$("hero-icon"),
@@ -401,9 +405,10 @@ function createEnemy(){
   const pick = pool[(G.stage - 1) % pool.length];
   const max = enemyMaxHp();
   G.enemy = { name: boss ? "👑 " + pick.name : pick.name, hp: max, max };
+  G.enemyMoves = 0;                 // yeni canavar → süre sayacı sıfırlanır
   el.enemyIcon.innerHTML = renderCreature(pick, boss ? 132 : 116, boss);
   el.enemyName.textContent = G.enemy.name;
-  renderHp();
+  renderHp(); updateDeadline();
 }
 function spawnEnemy(intro){
   applyZone();
@@ -546,10 +551,14 @@ function move(dir){               // 0 yukarı, 1 sağ, 2 aşağı, 3 sol
   }
   if(!moved) return;
   const spawned = addRandomTile();
-  // canavar saldırısı: belirli aralıkta tahtaya kilitli taş bırakır
+  // canavar saldırısı: SÜREYİ AŞARSAN taş başlar (zamanında yıkarsan taş yok)
   G.moves = (G.moves || 0) + 1;
-  if(G.enemy && G.enemy.hp > 0 && G.moves % atkEvery() === 0){
-    if(addStone()){ enemyStrike(); }
+  G.enemyMoves = (G.enemyMoves || 0) + 1;
+  if(G.enemy && G.enemy.hp > 0){
+    const over = G.enemyMoves - graceMoves();
+    if(over > 0 && over % overEvery() === 0){
+      if(addStone()){ enemyStrike(); if(over === overEvery()) banner("⏳ Çok yavaş — taş geliyor!"); }
+    }
   }
   actuate(removed);
   resolveMerges(merges);
@@ -557,6 +566,7 @@ function move(dir){               // 0 yukarı, 1 sağ, 2 aşağı, 3 sol
   // canavar öldüyse (aşama değişti) geri alma iptal — aksi halde bu hamle geri alınabilir
   G.undoSnap = (G.stage === snap.stage) ? snap : null;
   updateDanger();
+  updateDeadline();
   renderHud();
   renderAbilityBar();
   if(isGameOver()) endRun();
@@ -757,6 +767,14 @@ function updateDanger(){
   let filled = 0;
   for(let y=0;y<N;y++) for(let x=0;x<N;x++) if(grid[y][x]) filled++;
   el.board.classList.toggle("danger", filled >= N*N - 2);
+}
+/* canavarı yıkma süresi göstergesi (kalan hamle / taş uyarısı) */
+function updateDeadline(){
+  if(!el.deadline) return;
+  if(!G.enemy || G.enemy.hp <= 0){ el.deadline.textContent = ""; el.deadline.className = "deadline"; return; }
+  const left = graceMoves() - (G.enemyMoves || 0);
+  if(left > 0){ el.deadline.textContent = "⏳ " + left + " hamle"; el.deadline.className = "deadline" + (left <= 3 ? " warn" : ""); }
+  else { el.deadline.textContent = "⚠ taş geliyor!"; el.deadline.className = "deadline alarm"; }
 }
 
 /* ---- birleştirmeleri hasara/efekte çevir ---- */
@@ -1048,8 +1066,8 @@ function renderPowerShop(){
       desc:"Tüm birleştirme hasarı +%40 (kalıcı)", cost:mergeCost(), act:"merge" },
     { icon:"📖", oc:"#bfa6ff", name:"Mühür Ustalığı", lv:"Lv " + G.masteryLvl + " · +%" + (G.masteryLvl*25) + " jutsu",
       desc:"Jutsu karosu hasarı +%25 (kalıcı)", cost:masteryCost(), act:"mastery" },
-    { icon:"🛡️", oc:"#9aa0aa", name:"Taş Direnci", lv:"Lv " + G.stoneLvl + " · taş her " + atkEvery() + " hamlede",
-      desc:"Canavar daha seyrek taş bırakır (kalıcı)", cost:stoneCost(), act:"stone" },
+    { icon:"🛡️", oc:"#9aa0aa", name:"Taş Direnci", lv:"Lv " + G.stoneLvl + " · +" + (G.stoneLvl*2) + " hamle süre",
+      desc:"Canavarı yıkmak için +2 hamle süre (taş gecikir, kalıcı)", cost:stoneCost(), act:"stone" },
     { icon:"⬛", oc:"#7dff8a", name:"Geniş Tahta",
       lv: G.boardSize<SIZE_MAX ? `${G.boardSize}×${G.boardSize} → ${G.boardSize+1}×${G.boardSize+1}` : `${G.boardSize}×${G.boardSize} (MAX)`,
       desc:"Daha büyük tahta = çok daha ileri! (sonraki akışta)", cost:sizeCost(), act:"size", max:G.boardSize>=SIZE_MAX },
@@ -1212,7 +1230,7 @@ function bindInput(){
   el.gear.addEventListener("click", () => { if(confirm("Tüm ilerlemeyi sıfırla?")) resetGame(); });
   /* TEST BUTONU — SONRA KALDIR: her basışta +1000 ryō */
   const dbg = $("dbg-gold");
-  if(dbg) dbg.addEventListener("click", () => { G.gold += 1000; renderHud(); renderAbilityBar(); save(); banner("+1000 ryō (test)"); });
+  if(dbg) dbg.addEventListener("click", () => { G.gold += 100000; renderHud(); renderAbilityBar(); save(); banner("+100K ryō (test)"); });
   $("bo-restart").addEventListener("click", newRun);
   window.addEventListener("resize", relayout);
 
